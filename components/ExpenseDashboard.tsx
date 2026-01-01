@@ -227,6 +227,8 @@ export default function ExpenseDashboard() {
                     <TransactionTable
                         expenses={filteredExpenses}
                         onToggleCategory={toggleCategory}
+                        onToggleSubcategory={toggleSubcategory}
+                        filters={filters}
                         categories={categories}
                         subcategories={subcategories}
                     />

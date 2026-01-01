@@ -1,6 +1,6 @@
 'use client';
 
-import { Expense } from '@/lib/types/expense';
+import { Expense, FilterState } from '@/lib/types/expense';
 import {
     Table,
     TableBody,
@@ -20,6 +20,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 interface TransactionTableProps {
     expenses: Expense[];
     onToggleCategory?: (category: string) => void;
+    onToggleSubcategory?: (subcategory: string) => void;
+    filters?: FilterState;
     categories?: string[];
     subcategories?: string[];
 }
@@ -29,25 +31,26 @@ type SortConfig = {
     direction: 'asc' | 'desc';
 } | null;
 
-export function TransactionTable({ expenses, onToggleCategory, categories, subcategories }: TransactionTableProps) {
+export function TransactionTable({
+    expenses,
+    onToggleCategory,
+    onToggleSubcategory,
+    filters,
+    categories,
+    subcategories
+}: TransactionTableProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'parsedDate', direction: 'desc' });
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
     const itemsPerPage = 10;
 
-    const locallyFilteredExpenses = useMemo(() => {
-        return expenses.filter(e => {
-            const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(e.category);
-            const subcategoryMatch = selectedSubcategories.length === 0 || selectedSubcategories.includes(e.subcategory);
-            return categoryMatch && subcategoryMatch;
-        });
-    }, [expenses, selectedCategories, selectedSubcategories]);
+    // Use global filters if available, otherwise fallback to empty (though they should be provided)
+    const activeCategories = filters?.categories || [];
+    const activeSubcategories = filters?.subcategories || [];
 
     const sortedExpenses = useMemo(() => {
-        if (!sortConfig) return locallyFilteredExpenses;
+        if (!sortConfig) return expenses;
 
-        return [...locallyFilteredExpenses].sort((a, b) => {
+        return [...expenses].sort((a, b) => {
             let aValue: any = a[sortConfig.key as keyof Expense];
             let bValue: any = b[sortConfig.key as keyof Expense];
 
@@ -82,20 +85,6 @@ export function TransactionTable({ expenses, onToggleCategory, categories, subca
         return sortConfig.direction === 'asc' ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />;
     };
 
-    const toggleLocalCategory = (cat: string) => {
-        setSelectedCategories((prev: string[]) =>
-            prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-        );
-        setCurrentPage(1);
-    };
-
-    const toggleLocalSubcategory = (sub: string) => {
-        setSelectedSubcategories((prev: string[]) =>
-            prev.includes(sub) ? prev.filter(s => s !== sub) : [...prev, sub]
-        );
-        setCurrentPage(1);
-    };
-
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap gap-2 mb-2">
@@ -103,28 +92,33 @@ export function TransactionTable({ expenses, onToggleCategory, categories, subca
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button variant="outline" size="sm" className="h-8">
-                                Filter Categories {selectedCategories.length > 0 && `(${selectedCategories.length})`}
+                                Filter Categories {activeCategories.length > 0 && `(${activeCategories.length})`}
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-56 p-2" align="start">
                             <div className="space-y-2 max-h-[300px] overflow-y-auto">
                                 <div className="flex items-center justify-between mb-2 pb-2 border-b">
                                     <span className="text-xs font-semibold">Filter Category</span>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 text-[10px] uppercase font-bold text-slate-500"
-                                        onClick={() => setSelectedCategories([])}
-                                    >
-                                        Clear
-                                    </Button>
+                                    {activeCategories.length > 0 && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 text-[10px] uppercase font-bold text-slate-500"
+                                            onClick={() => activeCategories.forEach((cat: string) => onToggleCategory?.(cat))}
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
                                 </div>
                                 {categories.map(cat => (
                                     <div key={cat} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
                                         <Checkbox
                                             id={`table-cat-${cat}`}
-                                            checked={selectedCategories.includes(cat)}
-                                            onCheckedChange={() => toggleLocalCategory(cat)}
+                                            checked={activeCategories.includes(cat)}
+                                            onCheckedChange={() => {
+                                                onToggleCategory?.(cat);
+                                                setCurrentPage(1);
+                                            }}
                                         />
                                         <label htmlFor={`table-cat-${cat}`} className="text-sm font-normal cursor-pointer flex-1">
                                             {cat}
@@ -140,28 +134,33 @@ export function TransactionTable({ expenses, onToggleCategory, categories, subca
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button variant="outline" size="sm" className="h-8">
-                                Filter Subcategories {selectedSubcategories.length > 0 && `(${selectedSubcategories.length})`}
+                                Filter Subcategories {activeSubcategories.length > 0 && `(${activeSubcategories.length})`}
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-56 p-2" align="start">
                             <div className="space-y-2 max-h-[300px] overflow-y-auto">
                                 <div className="flex items-center justify-between mb-2 pb-2 border-b">
                                     <span className="text-xs font-semibold">Filter Subcategory</span>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 text-[10px] uppercase font-bold text-slate-500"
-                                        onClick={() => setSelectedSubcategories([])}
-                                    >
-                                        Clear
-                                    </Button>
+                                    {activeSubcategories.length > 0 && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 text-[10px] uppercase font-bold text-slate-500"
+                                            onClick={() => activeSubcategories.forEach((sub: string) => onToggleSubcategory?.(sub))}
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
                                 </div>
                                 {subcategories.map(sub => (
                                     <div key={sub} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
                                         <Checkbox
                                             id={`table-sub-${sub}`}
-                                            checked={selectedSubcategories.includes(sub)}
-                                            onCheckedChange={() => toggleLocalSubcategory(sub)}
+                                            checked={activeSubcategories.includes(sub)}
+                                            onCheckedChange={() => {
+                                                onToggleSubcategory?.(sub);
+                                                setCurrentPage(1);
+                                            }}
                                         />
                                         <label htmlFor={`table-sub-${sub}`} className="text-sm font-normal cursor-pointer flex-1">
                                             {sub}
@@ -173,17 +172,17 @@ export function TransactionTable({ expenses, onToggleCategory, categories, subca
                     </Popover>
                 )}
 
-                {(selectedCategories.length > 0 || selectedSubcategories.length > 0) && (
+                {(activeCategories.length > 0 || activeSubcategories.length > 0) && (
                     <Button
                         variant="ghost"
                         size="sm"
                         className="h-8 text-red-500 hover:text-red-700"
                         onClick={() => {
-                            setSelectedCategories([]);
-                            setSelectedSubcategories([]);
+                            activeCategories.forEach((cat: string) => onToggleCategory?.(cat));
+                            activeSubcategories.forEach((sub: string) => onToggleSubcategory?.(sub));
                         }}
                     >
-                        Reset Table Filters
+                        Reset All Filters
                         <X className="ml-2 h-4 w-4" />
                     </Button>
                 )}
