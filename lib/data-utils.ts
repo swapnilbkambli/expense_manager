@@ -12,17 +12,16 @@ export const filterExpenses = (expenses: Expense[], filters: FilterState): Expen
             return false;
         }
 
-        // Category and Subcategory filtering (Union/OR relationship)
+        // Category and Subcategory filtering (Intersection/AND relationship)
         const hasCategoryFilter = filters.categories.length > 0;
         const hasSubcategoryFilter = filters.subcategories.length > 0;
 
-        if (hasCategoryFilter || hasSubcategoryFilter) {
-            const matchesCategory = hasCategoryFilter && filters.categories.includes(expense.category);
-            const matchesSubcategory = hasSubcategoryFilter && filters.subcategories.includes(expense.subcategory);
+        if (hasCategoryFilter && !filters.categories.includes(expense.category)) {
+            return false;
+        }
 
-            if (!matchesCategory && !matchesSubcategory) {
-                return false;
-            }
+        if (hasSubcategoryFilter && !filters.subcategories.includes(expense.subcategory)) {
+            return false;
         }
 
         // Search query

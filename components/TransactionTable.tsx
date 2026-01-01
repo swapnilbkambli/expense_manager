@@ -246,7 +246,12 @@ export function TransactionTable({
                                         {expense.category}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="text-muted-foreground">{expense.subcategory}</TableCell>
+                                <TableCell
+                                    className="text-muted-foreground cursor-pointer hover:underline hover:text-slate-900 transition-colors"
+                                    onClick={() => onToggleSubcategory?.(expense.subcategory)}
+                                >
+                                    {expense.subcategory}
+                                </TableCell>
                                 <TableCell className="max-w-[200px] truncate">{expense.description}</TableCell>
                                 <TableCell className={`text-right font-semibold ${expense.amount > 0 ? 'text-emerald-600' : 'text-foreground'}`}>
                                     {expense.amount > 0 ? '+' : ''}
