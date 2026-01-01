@@ -70,8 +70,9 @@ export function RollupTable({
     }, [dateRange]);
 
     const [mode, setMode] = useState<'monthly' | 'yearly'>(defaultMode);
+    const [groupBy, setGroupBy] = useState<'category' | 'subcategory'>('category');
     const [drillDownData, setDrillDownData] = useState<{
-        category: string;
+        rowValue: string;
         periodLabel: string;
         expenses: Expense[];
     } | null>(null);
@@ -117,35 +118,41 @@ export function RollupTable({
     };
 
     const periods = useMemo(() => {
-        if (!dateRange) return [];
+        // Use global filter range if available, otherwise fallback to data range
+        const start = filters.dateRange.from || dateRange?.min;
+        const end = filters.dateRange.to || dateRange?.max;
+
+        if (!start || !end) return [];
+
         if (mode === 'yearly') {
-            return eachYearOfInterval({ start: dateRange.min, end: dateRange.max });
+            return eachYearOfInterval({ start, end });
         } else {
-            return eachMonthOfInterval({ start: dateRange.min, end: dateRange.max });
+            return eachMonthOfInterval({ start, end });
         }
-    }, [dateRange, mode]);
+    }, [filters.dateRange, dateRange, mode]);
 
     const data = useMemo(() => {
-        const categories = Array.from(new Set(expenseOnly.map(e => e.category))).sort();
+        const rows = Array.from(new Set(expenseOnly.map(e => (groupBy === 'category' ? e.category : e.subcategory) || 'Other'))).sort();
         const rollup: Record<string, Record<string, number>> = {};
 
-        categories.forEach(cat => {
-            rollup[cat] = {};
+        rows.forEach(row => {
+            rollup[row] = {};
             periods.forEach(p => {
                 const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
-                rollup[cat][key] = 0;
+                rollup[row][key] = 0;
             });
         });
 
         expenseOnly.forEach(e => {
             const periodKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
-            if (rollup[e.category] && rollup[e.category].hasOwnProperty(periodKey)) {
-                rollup[e.category][periodKey] += Math.abs(e.amount);
+            const rowValue = (groupBy === 'category' ? e.category : e.subcategory) || 'Other';
+            if (rollup[rowValue] && rollup[rowValue].hasOwnProperty(periodKey)) {
+                rollup[rowValue][periodKey] += Math.abs(e.amount);
             }
         });
 
-        return { categories, rollup };
-    }, [expenseOnly, periods, mode]);
+        return { rows, rollup };
+    }, [expenseOnly, periods, mode, groupBy]);
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('en-IN', {
@@ -262,6 +269,20 @@ export function RollupTable({
 
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
+                    <div className="flex bg-slate-100 p-1 rounded-md border text-[10px] font-bold uppercase mr-2">
+                        <button
+                            className={`px-3 py-1 rounded-sm transition-all ${groupBy === 'category' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}
+                            onClick={() => setGroupBy('category')}
+                        >
+                            Category
+                        </button>
+                        <button
+                            className={`px-3 py-1 rounded-sm transition-all ${groupBy === 'subcategory' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}
+                            onClick={() => setGroupBy('subcategory')}
+                        >
+                            Subcategory
+                        </button>
+                    </div>
                     <Button
                         variant={mode === 'monthly' ? 'default' : 'outline'}
                         size="sm"
@@ -281,7 +302,7 @@ export function RollupTable({
                 </div>
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
                     <CalendarRange className="w-3 h-3" />
-                    {mode === 'yearly' ? 'Yearly' : 'Monthly'} aggregation
+                    {mode === 'yearly' ? 'Yearly' : 'Monthly'} by {groupBy}
                 </div>
             </div>
 
@@ -289,8 +310,8 @@ export function RollupTable({
                 <Table>
                     <TableHeader className="bg-slate-50">
                         <TableRow>
-                            <TableHead className="font-bold min-w-[150px] sticky left-0 bg-slate-50 z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                                Category
+                            <TableHead className="font-bold min-w-[200px] sticky left-0 bg-slate-50 z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                {groupBy === 'category' ? 'Category' : 'Subcategory'}
                             </TableHead>
                             {periods.map(p => (
                                 <TableHead key={p.getTime()} className="text-right font-bold whitespace-nowrap px-4">
@@ -303,21 +324,22 @@ export function RollupTable({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {data.categories.map(cat => {
+                        {data.rows.map(rowVal => {
                             let rowTotal = 0;
                             return (
-                                <TableRow key={cat}>
+                                <TableRow key={rowVal}>
                                     <TableCell className="font-medium sticky left-0 bg-white z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                                        {cat}
+                                        {rowVal}
                                     </TableCell>
                                     {periods.map(p => {
                                         const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
-                                        const val = data.rollup[cat][key] || 0;
+                                        const val = data.rollup[rowVal][key] || 0;
                                         rowTotal += val;
 
                                         const periodExpenses = expenseOnly.filter(e => {
                                             const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
-                                            return e.category === cat && pKey === key;
+                                            const eRowVal = (groupBy === 'category' ? e.category : e.subcategory) || 'Other';
+                                            return eRowVal === rowVal && pKey === key;
                                         });
 
                                         return (
@@ -327,7 +349,7 @@ export function RollupTable({
                                                         variant="ghost"
                                                         className="w-full justify-end h-10 font-normal hover:bg-blue-50 hover:text-blue-600 rounded-none transition-colors"
                                                         onClick={() => setDrillDownData({
-                                                            category: cat,
+                                                            rowValue: rowVal,
                                                             periodLabel: key,
                                                             expenses: periodExpenses
                                                         })}
@@ -340,7 +362,7 @@ export function RollupTable({
                                             </TableCell>
                                         );
                                     })}
-                                    <TableCell className="text-right font-bold bg-blue-50/30 text-blue-700">
+                                    <TableCell className="text-right font-bold bg-blue-50/30 text-blue-700 pr-4">
                                         {formatCurrency(rowTotal)}
                                     </TableCell>
                                 </TableRow>
@@ -353,22 +375,22 @@ export function RollupTable({
                             {periods.map(p => {
                                 const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
                                 let colTotal = 0;
-                                data.categories.forEach(cat => {
-                                    colTotal += data.rollup[cat][key] || 0;
+                                data.rows.forEach(row => {
+                                    colTotal += data.rollup[row][key] || 0;
                                 });
                                 return (
-                                    <TableCell key={p.getTime()} className="text-right">
+                                    <TableCell key={p.getTime()} className="text-right pr-4">
                                         {formatCurrency(colTotal)}
                                     </TableCell>
                                 );
                             })}
-                            <TableCell className="text-right bg-blue-100 text-blue-800">
+                            <TableCell className="text-right bg-blue-100 text-blue-800 pr-4">
                                 {formatCurrency(
                                     periods.reduce((acc, p) => {
                                         const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
                                         let colTotal = 0;
-                                        data.categories.forEach(cat => {
-                                            colTotal += data.rollup[cat][key] || 0;
+                                        data.rows.forEach(row => {
+                                            colTotal += data.rollup[row][key] || 0;
                                         });
                                         return acc + colTotal;
                                     }, 0)
@@ -380,7 +402,7 @@ export function RollupTable({
             </div>
 
             <Dialog open={!!drillDownData} onOpenChange={(open) => !open && setDrillDownData(null)}>
-                <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
+                <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-hidden flex flex-col">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-xl">
                             <ListFilter className="w-5 h-5 text-blue-600" />
@@ -388,7 +410,7 @@ export function RollupTable({
                         </DialogTitle>
                         <DialogDescription>
                             Showing <strong>{drillDownData?.expenses.length}</strong> transactions for
-                            <Badge variant="outline" className="mx-1 bg-slate-50">{drillDownData?.category}</Badge>
+                            <Badge variant="outline" className="mx-1 bg-slate-50">{drillDownData?.rowValue}</Badge>
                             in <strong>{drillDownData?.periodLabel}</strong>
                         </DialogDescription>
                     </DialogHeader>
