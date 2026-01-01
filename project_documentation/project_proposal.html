@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Proposal: Personal Expense Analytics Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9fafb;
+        }
+
+        h1 {
+            color: #111827;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #1f2937;
+            margin-top: 30px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 10px;
+        }
+
+        h3 {
+            color: #374151;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            background: #eff6ff;
+            color: #1e40af;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid #bfdbfe;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-item strong {
+            color: #2563eb;
+        }
+
+        code {
+            background: #f3f4f6;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .mockup-desc {
+            font-style: italic;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Project Proposal: Personal Expense Analytics Dashboard</h1>
+    <p>A high-performance, client-side reporting tool built with Next.js to transform raw CSV expense data into
+        actionable financial insights.</p>
+
+    <h2>1. Core Tech Stack</h2>
+    <div class="tech-stack">
+        <span class="badge">Next.js 14 (App Router)</span>
+        <span class="badge">Tailwind CSS</span>
+        <span class="badge">Shadcn UI</span>
+        <span class="badge">Recharts</span>
+        <span class="badge">PapaParse (CSV Engine)</span>
+        <span class="badge">date-fns</span>
+        <span class="badge">Lucide React Icons</span>
+    </div>
+
+    <h2>2. Key Features</h2>
+    <ul class="feature-list">
+        <li class="feature-item">
+            <strong>Dynamic File Ingestion:</strong>
+            A drag-and-drop CSV uploader that parses files locally. No data leaves the browser, ensuring 100% privacy.
+        </li>
+        <li class="feature-item">
+            <strong>Advanced Multi-Filtering:</strong>
+            Global filters for <code>Category</code> and <code>Subcategory</code> using multi-select searchable
+            dropdowns. These filters dynamically update based on the uploaded file's unique values.
+        </li>
+        <li class="feature-item">
+            <strong>Temporal Intelligence:</strong>
+            Pre-defined date ranges (YTD, All Time, Last 30 Days) and a Custom Calendar Date Range picker.
+        </li>
+        <li class="feature-item">
+            <strong>Interactive Visualizations:</strong>
+            Real-time refreshing charts including:
+            <ul>
+                <li><strong>Trend Line:</strong> Daily/Monthly spending over time.</li>
+                <li><strong>Composition Donut:</strong> Percentage share of spending by Category.</li>
+                <li><strong>Subcategory Bar Chart:</strong> Ranking of highest spending areas.</li>
+            </ul>
+        </li>
+        <li class="feature-item">
+            <strong>Summary Metrics:</strong>
+            Top-level "Stat Cards" showing Total Income, Total Expenses, and Net Savings for the selected period.
+        </li>
+    </ul>
+
+    <h2>3. Data Structure Mapping</h2>
+    <p>The application will map your specific CSV headers to the UI logic:</p>
+    <ul>
+        <li><code>Date</code> (Format: DD-MM-YYYY) -> Temporal filtering</li>
+        <li><code>Amount</code> (Negative for expenses, Positive for income) -> Metric calculation</li>
+        <li><code>Category</code> -> Primary grouping</li>
+        <li><code>Subcategory</code> -> Secondary drill-down</li>
+    </ul>
+
+    <h2>4. Proposed UI Layout</h2>
+    <div class="feature-item">
+        <strong>Header:</strong> App title and "Upload New CSV" button.
+        <div class="mockup-desc">Visual: Clean, sticky navigation with a dark/light mode toggle.</div>
+    </div>
+    <div class="feature-item">
+        <strong>Filter Bar:</strong> Horizontal bar with Date Range Picker, Category Multi-select, and Subcategory
+        Multi-select.
+        <div class="mockup-desc">Visual: Flexible grid that wraps on mobile. Categories show counts (e.g., "Food (12)").
+        </div>
+    </div>
+    <div class="feature-item">
+        <strong>Dashboard Grid:</strong>
+        - Row 1: Three Stat Cards (Income, Expense, Savings).
+        - Row 2: Large Line Chart (Monthly Trends).
+        - Row 3: Donut Chart (Category Split) & Vertical Bar Chart (Subcategory breakdown).
+    </div>
+    <div class="feature-item">
+        <strong>Transaction Table:</strong> A searchable, sortable list of all transactions matching current filters.
+        <div class="mockup-desc">Visual: Styled with Shadcn Data Tables with pagination.</div>
+    </div>
+
+    <h2>5. Implementation Plan</h2>
+    <ol>
+        <li><strong>Phase 1:</strong> Setup Next.js environment and Shadcn UI components.</li>
+        <li><strong>Phase 2:</strong> Build the CSV parsing engine using <code>PapaParse</code> with date formatting
+            logic.</li>
+        <li><strong>Phase 3:</strong> Implement the global state for filters (Date/Category/Subcategory).</li>
+        <li><strong>Phase 4:</strong> Integrate Recharts with responsive containers that listen to filter changes.</li>
+        <li><strong>Phase 5:</strong> Final Polish: Add "Empty State" illustrations and loading skeletons.</li>
+    </ol>
+
+</body>
+
+</html>

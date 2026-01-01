@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Personal Expense Analytics Dashboard
 
-## Getting Started
+A high-performance, privacy-first financial reporting tool built with Next.js. This dashboard transforms raw CSV expense data into actionable insights with interactive visualizations and advanced filtering.
 
-First, run the development server:
+![Dashboard Preview](public/preview.png)
 
+## 🚀 Features
+
+-   **Privacy First**: All CSV parsing and data processing happen client-side in your browser. No financial data ever leaves your machine.
+-   **Interactive Visualizations**:
+    -   **Trend Analysis**: Area charts showing daily/monthly spending vs income.
+    -   **Category Breakdown**: Interactive donut charts with click-to-filter capability.
+    -   **Subcategory Ranking**: Bar charts ranking your highest spending areas.
+-   **Advanced Filtering**:
+    -   **Temporal Intelligence**: Pre-defined ranges (YTD, Last 30 Days) and a custom date picker with manual text input.
+    -   **Multi-Select Filters**: Filter by one or more categories and subcategories.
+    -   **Search**: Instant search across descriptions, categories, and payees.
+-   **Financial Insights**:
+    -   **Stat Cards**: Real-time Total Income, Total Expenses, and Net Savings.
+    -   **Spending Insights**: Automaticaly identifies average monthly spend, peak spending periods, and top category impacts.
+    -   **Monthly Averages Table**: Detailed breakdown of monthly average spend per category/subcategory with interactive selection.
+
+## 🛠️ Tech Stack
+
+-   **Framework**: Next.js 14 (App Router)
+-   **Styling**: Tailwind CSS + Shadcn UI
+-   **Data Processing**: PapaParse (CSV)
+-   **Charts**: Recharts
+-   **Date Handling**: date-fns
+-   **Icons**: Lucide React
+
+## 📋 Setup Instructions
+
+Follow these steps to get the project running locally:
+
+### 1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/swapnilbkambli/expense_manager.git
+cd expense_manager
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Run the development server
+```bash
+npm run dev -- -p 3005
+```
+The application will be available at [http://localhost:3005](http://localhost:3005).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Upload your data
+1.  Locate your `expensemanager.csv` file.
+2.  Drag and drop it into the dashboard upload area.
+3.  Explore your financial insights!
 
-## Learn More
+## 📄 CSV Data Structure
+The application expects a CSV with the following headers:
+`Date, Amount, Category, Subcategory, Description` (Additional columns are ignored but won't break the app).
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📝 License
+MIT
