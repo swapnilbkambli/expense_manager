@@ -70,15 +70,14 @@ export function RollupTable({
     }, [dateRange]);
 
     const [mode, setMode] = useState<'monthly' | 'yearly'>(defaultMode);
-    const [groupBy, setGroupBy] = useState<'category' | 'subcategory'>('category');
     const [drillDownData, setDrillDownData] = useState<{
-        rowValue: string;
+        category: string;
         periodLabel: string;
         expenses: Expense[];
     } | null>(null);
 
     const [modalSortConfig, setModalSortConfig] = useState<{
-        key: 'parsedDate' | 'payeePayer' | 'absAmount';
+        key: 'parsedDate' | 'category' | 'subcategory' | 'payeePayer' | 'absAmount';
         direction: 'asc' | 'desc';
     }>({ key: 'parsedDate', direction: 'desc' });
 
@@ -105,7 +104,7 @@ export function RollupTable({
         });
     }, [drillDownData, modalSortConfig]);
 
-    const handleModalSort = (key: 'parsedDate' | 'payeePayer' | 'absAmount') => {
+    const handleModalSort = (key: 'parsedDate' | 'category' | 'subcategory' | 'payeePayer' | 'absAmount') => {
         setModalSortConfig(prev => ({
             key,
             direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
@@ -132,27 +131,26 @@ export function RollupTable({
     }, [filters.dateRange, dateRange, mode]);
 
     const data = useMemo(() => {
-        const rows = Array.from(new Set(expenseOnly.map(e => (groupBy === 'category' ? e.category : e.subcategory) || 'Other'))).sort();
+        const categoriesList = Array.from(new Set(expenseOnly.map(e => e.category))).sort();
         const rollup: Record<string, Record<string, number>> = {};
 
-        rows.forEach(row => {
-            rollup[row] = {};
+        categoriesList.forEach(cat => {
+            rollup[cat] = {};
             periods.forEach(p => {
                 const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
-                rollup[row][key] = 0;
+                rollup[cat][key] = 0;
             });
         });
 
         expenseOnly.forEach(e => {
             const periodKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
-            const rowValue = (groupBy === 'category' ? e.category : e.subcategory) || 'Other';
-            if (rollup[rowValue] && rollup[rowValue].hasOwnProperty(periodKey)) {
-                rollup[rowValue][periodKey] += Math.abs(e.amount);
+            if (rollup[e.category] && rollup[e.category].hasOwnProperty(periodKey)) {
+                rollup[e.category][periodKey] += Math.abs(e.amount);
             }
         });
 
-        return { rows, rollup };
-    }, [expenseOnly, periods, mode, groupBy]);
+        return { rows: categoriesList, rollup };
+    }, [expenseOnly, periods, mode]);
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('en-IN', {
@@ -269,20 +267,6 @@ export function RollupTable({
 
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <div className="flex bg-slate-100 p-1 rounded-md border text-[10px] font-bold uppercase mr-2">
-                        <button
-                            className={`px-3 py-1 rounded-sm transition-all ${groupBy === 'category' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}
-                            onClick={() => setGroupBy('category')}
-                        >
-                            Category
-                        </button>
-                        <button
-                            className={`px-3 py-1 rounded-sm transition-all ${groupBy === 'subcategory' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}
-                            onClick={() => setGroupBy('subcategory')}
-                        >
-                            Subcategory
-                        </button>
-                    </div>
                     <Button
                         variant={mode === 'monthly' ? 'default' : 'outline'}
                         size="sm"
@@ -302,7 +286,7 @@ export function RollupTable({
                 </div>
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
                     <CalendarRange className="w-3 h-3" />
-                    {mode === 'yearly' ? 'Yearly' : 'Monthly'} by {groupBy}
+                    {mode === 'yearly' ? 'Yearly' : 'Monthly'} aggregation
                 </div>
             </div>
 
@@ -311,7 +295,7 @@ export function RollupTable({
                     <TableHeader className="bg-slate-50">
                         <TableRow>
                             <TableHead className="font-bold min-w-[200px] sticky left-0 bg-slate-50 z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                                {groupBy === 'category' ? 'Category' : 'Subcategory'}
+                                Category
                             </TableHead>
                             {periods.map(p => (
                                 <TableHead key={p.getTime()} className="text-right font-bold whitespace-nowrap px-4">
@@ -338,8 +322,7 @@ export function RollupTable({
 
                                         const periodExpenses = expenseOnly.filter(e => {
                                             const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
-                                            const eRowVal = (groupBy === 'category' ? e.category : e.subcategory) || 'Other';
-                                            return eRowVal === rowVal && pKey === key;
+                                            return e.category === rowVal && pKey === key;
                                         });
 
                                         return (
@@ -349,7 +332,7 @@ export function RollupTable({
                                                         variant="ghost"
                                                         className="w-full justify-end h-10 font-normal hover:bg-blue-50 hover:text-blue-600 rounded-none transition-colors"
                                                         onClick={() => setDrillDownData({
-                                                            rowValue: rowVal,
+                                                            category: rowVal,
                                                             periodLabel: key,
                                                             expenses: periodExpenses
                                                         })}
@@ -402,7 +385,7 @@ export function RollupTable({
             </div>
 
             <Dialog open={!!drillDownData} onOpenChange={(open) => !open && setDrillDownData(null)}>
-                <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-hidden flex flex-col">
+                <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-hidden flex flex-col p-6">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-xl">
                             <ListFilter className="w-5 h-5 text-blue-600" />
@@ -410,12 +393,12 @@ export function RollupTable({
                         </DialogTitle>
                         <DialogDescription>
                             Showing <strong>{drillDownData?.expenses.length}</strong> transactions for
-                            <Badge variant="outline" className="mx-1 bg-slate-50">{drillDownData?.rowValue}</Badge>
+                            <Badge variant="outline" className="mx-1 bg-slate-50">{drillDownData?.category}</Badge>
                             in <strong>{drillDownData?.periodLabel}</strong>
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto mt-4 rounded-md border">
+                    <div className="flex-1 overflow-auto mt-4 rounded-md border">
                         <Table>
                             <TableHeader className="bg-slate-50 sticky top-0 z-20">
                                 <TableRow>
@@ -425,6 +408,22 @@ export function RollupTable({
                                     >
                                         <div className="flex items-center">
                                             Date {getModalSortIcon('parsedDate')}
+                                        </div>
+                                    </TableHead>
+                                    <TableHead
+                                        className="cursor-pointer hover:bg-slate-100 transition-colors"
+                                        onClick={() => handleModalSort('category')}
+                                    >
+                                        <div className="flex items-center">
+                                            Category {getModalSortIcon('category')}
+                                        </div>
+                                    </TableHead>
+                                    <TableHead
+                                        className="cursor-pointer hover:bg-slate-100 transition-colors"
+                                        onClick={() => handleModalSort('subcategory')}
+                                    >
+                                        <div className="flex items-center">
+                                            Subcategory {getModalSortIcon('subcategory')}
                                         </div>
                                     </TableHead>
                                     <TableHead
@@ -450,12 +449,18 @@ export function RollupTable({
                                 {sortedDrillDownExpenses.map((expense, idx) => (
                                     <TableRow key={`${expense.rowId}-${idx}`}>
                                         <TableCell className="whitespace-nowrap font-medium">
-                                            {expense.date}
+                                            {format(expense.parsedDate, 'dd-MM-yyyy')}
                                         </TableCell>
-                                        <TableCell className="max-w-[200px] truncate">
+                                        <TableCell className="whitespace-nowrap">
+                                            <Badge variant="secondary" className="font-normal">{expense.category}</Badge>
+                                        </TableCell>
+                                        <TableCell className="whitespace-nowrap">
+                                            {expense.subcategory || '-'}
+                                        </TableCell>
+                                        <TableCell className="max-w-[200px] truncate font-medium">
                                             {expense.payeePayer || '-'}
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground italic">
+                                        <TableCell className="text-muted-foreground italic max-w-xs truncate">
                                             {expense.description}
                                         </TableCell>
                                         <TableCell className="text-right font-semibold text-foreground">
