@@ -14,6 +14,7 @@ import { SubcategoryBar } from './Charts/SubcategoryBar';
 import { AveragesTable } from './AveragesTable';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import { getDefaultCSVData } from '@/lib/actions';
 import { Upload, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -28,12 +29,10 @@ export default function ExpenseDashboard() {
     });
 
     useEffect(() => {
-        // Load default CSV on mount
+        // Load default CSV on mount via Server Action
         const loadDefaultData = async () => {
             try {
-                const response = await fetch('/data.csv');
-                if (!response.ok) throw new Error('Default data not found');
-                const csvText = await response.text();
+                const csvText = await getDefaultCSVData();
                 const parsed = await parseExpenseCSV(csvText);
                 setAllExpenses(parsed);
             } catch (error) {

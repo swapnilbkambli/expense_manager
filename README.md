@@ -61,3 +61,8 @@ The application expects a CSV with the following headers:
 
 ## 📝 License
 MIT
+
+---
+
+> [!WARNING]
+> **Privacy Reminder**: This dashboard processes all data client-side for privacy. However, if you use a **Public** GitHub repository, do not commit your real `expensemanager.csv` or any file containing sensitive financial data to the repository, as it will be visible to anyone. The default `project_documentation/expensemanager.csv` provided here is sample data only.
