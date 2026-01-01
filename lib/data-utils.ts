@@ -3,11 +3,13 @@ import { isWithinInterval, startOfYear, endOfYear, subDays, startOfMonth, endOfM
 
 export const filterExpenses = (expenses: Expense[], filters: FilterState): Expense[] => {
     return expenses.filter((expense) => {
-        // Date filtering
-        if (filters.dateRange.from && filters.dateRange.to) {
-            if (!isWithinInterval(expense.parsedDate, { start: filters.dateRange.from, end: filters.dateRange.to })) {
-                return false;
-            }
+        // Date filtering (Independent From/To)
+        const date = expense.parsedDate;
+        if (filters.dateRange.from && date < filters.dateRange.from) {
+            return false;
+        }
+        if (filters.dateRange.to && date > filters.dateRange.to) {
+            return false;
         }
 
         // Category and Subcategory filtering (Union/OR relationship)
