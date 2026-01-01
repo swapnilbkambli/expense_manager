@@ -2,6 +2,15 @@ import Papa from 'papaparse';
 import { parse, isValid } from 'date-fns';
 import { Expense } from './types/expense';
 
+const toTitleCase = (str: string) => {
+    if (!str) return '';
+    return str
+        .toLowerCase()
+        .split(' ')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+};
+
 export const parseExpenseCSV = (csvString: string): Promise<Expense[]> => {
     return new Promise((resolve, reject) => {
         Papa.parse(csvString, {
@@ -22,8 +31,8 @@ export const parseExpenseCSV = (csvString: string): Promise<Expense[]> => {
                         date: dateStr,
                         parsedDate,
                         amount: parseFloat(row['Amount']) || 0,
-                        category: row['Category'] || 'Uncategorized',
-                        subcategory: row['Subcategory'] || '',
+                        category: toTitleCase(row['Category']) || 'Uncategorized',
+                        subcategory: toTitleCase(row['Subcategory']) || '',
                         paymentMethod: row['Payment Method'] || '',
                         description: row['Description'] || '',
                         refCheckNo: row['Ref/Check No'] || '',
