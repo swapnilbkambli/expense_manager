@@ -46,6 +46,15 @@ export default function ExpenseDashboard() {
         return filterExpenses(allExpenses, filters);
     }, [allExpenses, filters]);
 
+    // Used for AveragesTable to keep all categories visible during multi-select
+    const baseFilteredExpenses = useMemo(() => {
+        return filterExpenses(allExpenses, {
+            ...filters,
+            categories: [],
+            subcategories: [],
+        });
+    }, [allExpenses, filters.dateRange, filters.searchQuery]);
+
     const metrics = useMemo(() => {
         return calculateMetrics(filteredExpenses);
     }, [filteredExpenses]);
@@ -192,7 +201,7 @@ export default function ExpenseDashboard() {
                     </CardHeader>
                     <CardContent>
                         <AveragesTable
-                            expenses={filteredExpenses}
+                            expenses={baseFilteredExpenses}
                             filters={filters}
                             onToggleCategory={toggleCategory}
                             onToggleSubcategory={toggleSubcategory}
