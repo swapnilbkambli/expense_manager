@@ -28,7 +28,7 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
         setToInput(filters.dateRange.to ? format(filters.dateRange.to, 'dd/MM/yyyy') : '');
     }, [filters.dateRange]);
 
-    const [selectTarget, setSelectTarget] = useState<'from' | 'to'>('from');
+    // No longer need selectTarget as we have separate controls
 
     const handleManualDateChange = (type: 'from' | 'to', value: string) => {
         if (type === 'from') setFromInput(value);
@@ -66,16 +66,23 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
         }
     };
 
-    const handleCalendarSelect = (date: Date | undefined) => {
+    const handleCalendarSelect = (type: 'from' | 'to', date: Date | undefined) => {
         if (!date) return;
 
         setFilters((prev: FilterState) => ({
             ...prev,
             dateRange: {
                 ...prev.dateRange,
-                [selectTarget]: date
+                [type]: date
             }
         }));
+    };
+
+    const handleMonthChange = (type: 'from' | 'to', month: Date) => {
+        // When user changes month/year via dropdown (or arrows), 
+        // automatically set the date to the 1st of that month.
+        const firstOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
+        handleCalendarSelect(type, firstOfMonth);
     };
 
     const handleTimeRangeChange = (value: string) => {
@@ -161,72 +168,93 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
                     </SelectContent>
                 </Select>
 
-                {/* Custom Date Picker (only if Custom) */}
+                {/* Custom Date Pickers (only if Custom) */}
                 {filters.timeRange === 'Custom' && (
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className={cn(
-                                    "justify-start text-left font-normal h-10 min-w-[240px]",
-                                    !filters.dateRange.from && "text-muted-foreground"
-                                )}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {filters.dateRange.from ? (
-                                    filters.dateRange.to ? (
-                                        <>
-                                            {format(filters.dateRange.from, "LLL dd, y")} -{" "}
-                                            {format(filters.dateRange.to, "LLL dd, y")}
-                                        </>
-                                    ) : (
-                                        format(filters.dateRange.from, "LLL dd, y")
-                                    )
-                                ) : (
-                                    <span>Pick a date range</span>
-                                )}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-4" align="start">
-                            <div className="space-y-4">
-                                <div className="flex gap-2">
-                                    <div className="grid gap-1.5 flex-1">
+                    <div className="flex gap-2">
+                        {/* From Picker */}
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "justify-start text-left font-normal h-10 w-[180px]",
+                                        !filters.dateRange.from && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {filters.dateRange.from ? format(filters.dateRange.from, "LLL dd, y") : 'From Date'}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-4" align="start">
+                                <div className="space-y-4">
+                                    <div className="grid gap-1.5">
                                         <label className="text-xs font-medium text-muted-foreground">From (DD/MM/YYYY)</label>
                                         <Input
                                             placeholder="DD/MM/YYYY"
                                             value={fromInput}
                                             onChange={(e) => handleManualDateChange('from', e.target.value)}
-                                            onFocus={() => setSelectTarget('from')}
                                             onBlur={(e) => handleCommitDate('from', e.target.value)}
-                                            className={cn("h-8 text-sm", selectTarget === 'from' && "border-primary ring-1 ring-primary")}
+                                            className="h-8 text-sm"
                                         />
                                     </div>
-                                    <div className="grid gap-1.5 flex-1">
+                                    <Calendar
+                                        initialFocus
+                                        mode="single"
+                                        defaultMonth={filters.dateRange.from || new Date()}
+                                        selected={filters.dateRange.from}
+                                        onSelect={(date) => handleCalendarSelect('from', date)}
+                                        onMonthChange={(month) => handleMonthChange('from', month)}
+                                        numberOfMonths={1}
+                                        captionLayout="dropdown"
+                                        fromYear={2000}
+                                        toYear={new Date().getFullYear()}
+                                    />
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+
+                        {/* To Picker */}
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "justify-start text-left font-normal h-10 w-[180px]",
+                                        !filters.dateRange.to && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {filters.dateRange.to ? format(filters.dateRange.to, "LLL dd, y") : 'To Date'}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-4" align="start">
+                                <div className="space-y-4">
+                                    <div className="grid gap-1.5">
                                         <label className="text-xs font-medium text-muted-foreground">To (DD/MM/YYYY)</label>
                                         <Input
                                             placeholder="DD/MM/YYYY"
                                             value={toInput}
                                             onChange={(e) => handleManualDateChange('to', e.target.value)}
-                                            onFocus={() => setSelectTarget('to')}
                                             onBlur={(e) => handleCommitDate('to', e.target.value)}
-                                            className={cn("h-8 text-sm", selectTarget === 'to' && "border-primary ring-1 ring-primary")}
+                                            className="h-8 text-sm"
                                         />
                                     </div>
+                                    <Calendar
+                                        initialFocus
+                                        mode="single"
+                                        defaultMonth={filters.dateRange.to || new Date()}
+                                        selected={filters.dateRange.to}
+                                        onSelect={(date) => handleCalendarSelect('to', date)}
+                                        onMonthChange={(month) => handleMonthChange('to', month)}
+                                        numberOfMonths={1}
+                                        captionLayout="dropdown"
+                                        fromYear={2000}
+                                        toYear={new Date().getFullYear()}
+                                    />
                                 </div>
-                                <Calendar
-                                    initialFocus
-                                    mode="single"
-                                    defaultMonth={filters.dateRange[selectTarget] || new Date()}
-                                    selected={filters.dateRange[selectTarget]}
-                                    onSelect={handleCalendarSelect}
-                                    numberOfMonths={2}
-                                    captionLayout="dropdown"
-                                    fromYear={2000}
-                                    toYear={new Date().getFullYear()}
-                                />
-                            </div>
-                        </PopoverContent>
-                    </Popover>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                 )}
 
                 {/* Categories Popover */}
