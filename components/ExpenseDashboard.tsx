@@ -21,7 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 export default function ExpenseDashboard() {
     const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
     const [filters, setFilters] = useState<FilterState>({
-        dateRange: { from: new Date(), to: undefined },
+        dateRange: { from: undefined, to: new Date() },
         timeRange: 'Custom',
         categories: [],
         subcategories: [],
