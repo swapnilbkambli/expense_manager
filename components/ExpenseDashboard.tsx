@@ -12,6 +12,7 @@ import { TrendChart } from './Charts/TrendChart';
 import { CategoryDonut } from './Charts/CategoryDonut';
 import { SubcategoryBar } from './Charts/SubcategoryBar';
 import { AveragesTable } from './AveragesTable';
+import { RollupTable } from './RollupTable';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { getDefaultCSVData } from '@/lib/actions';
@@ -27,6 +28,7 @@ export default function ExpenseDashboard() {
         subcategories: [],
         searchQuery: '',
     });
+    const [viewMode, setViewMode] = useState<'list' | 'rollup'>('list');
 
     useEffect(() => {
         // Load default CSV on mount via Server Action
@@ -220,18 +222,45 @@ export default function ExpenseDashboard() {
             </div>
 
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-lg font-medium">Transactions</CardTitle>
+                    <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'list'
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                        >
+                            Detailed List
+                        </button>
+                        <button
+                            onClick={() => setViewMode('rollup')}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'rollup'
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                        >
+                            Roll-up View
+                        </button>
+                    </div>
                 </CardHeader>
                 <CardContent>
-                    <TransactionTable
-                        expenses={filteredExpenses}
-                        onToggleCategory={toggleCategory}
-                        onToggleSubcategory={toggleSubcategory}
-                        filters={filters}
-                        categories={categories}
-                        subcategories={subcategories}
-                    />
+                    {viewMode === 'list' ? (
+                        <TransactionTable
+                            expenses={filteredExpenses}
+                            onToggleCategory={toggleCategory}
+                            onToggleSubcategory={toggleSubcategory}
+                            filters={filters}
+                            categories={categories}
+                            subcategories={subcategories}
+                        />
+                    ) : (
+                        <RollupTable
+                            expenses={filteredExpenses}
+                            filters={filters}
+                        />
+                    )}
                 </CardContent>
             </Card>
         </div>
