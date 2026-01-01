@@ -120,19 +120,21 @@ export default function ExpenseDashboard() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Personal Expense Analytics</h1>
+                <div className="flex flex-col gap-2">
+                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-1">
+                        Personal Expense Analytics
+                    </h1>
                     {allExpenses.length > 0 && (
-                        <p className="text-sm text-muted-foreground">
-                            Showing results from{' '}
-                            <span className="font-medium text-slate-700">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                Active Period:
+                            </span>
+                            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                                 {filters.dateRange.from ? format(filters.dateRange.from, 'dd MMM yyyy') : format(new Date(Math.min(...allExpenses.map(e => e.parsedDate.getTime()))), 'dd MMM yyyy')}
-                            </span>
-                            {' '}to{' '}
-                            <span className="font-medium text-slate-700">
+                                <span className="mx-1.5 opacity-50">—</span>
                                 {filters.dateRange.to ? format(filters.dateRange.to, 'dd MMM yyyy') : format(new Date(Math.max(...allExpenses.map(e => e.parsedDate.getTime()))), 'dd MMM yyyy')}
-                            </span>
-                        </p>
+                            </div>
+                        </div>
                     )}
                 </div>
                 <div className="flex gap-2">
