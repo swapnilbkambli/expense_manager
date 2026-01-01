@@ -16,12 +16,21 @@ import {
     eachMonthOfInterval,
     eachYearOfInterval,
     isSameMonth,
-    isSameYear
+    isSameYear,
+    parse
 } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftRight, CalendarRange, X } from 'lucide-react';
+import { ArrowLeftRight, CalendarRange, X, ListFilter } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 interface RollupTableProps {
     expenses: Expense[];
@@ -61,6 +70,11 @@ export function RollupTable({
     }, [dateRange]);
 
     const [mode, setMode] = useState<'monthly' | 'yearly'>(defaultMode);
+    const [drillDownData, setDrillDownData] = useState<{
+        category: string;
+        periodLabel: string;
+        expenses: Expense[];
+    } | null>(null);
 
     const periods = useMemo(() => {
         if (!dateRange) return [];
@@ -260,9 +274,29 @@ export function RollupTable({
                                         const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
                                         const val = data.rollup[cat][key] || 0;
                                         rowTotal += val;
+
+                                        const periodExpenses = expenseOnly.filter(e => {
+                                            const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
+                                            return e.category === cat && pKey === key;
+                                        });
+
                                         return (
-                                            <TableCell key={p.getTime()} className="text-right">
-                                                {val > 0 ? formatCurrency(val) : '-'}
+                                            <TableCell key={p.getTime()} className="text-right p-0">
+                                                {val > 0 ? (
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="w-full justify-end h-10 font-normal hover:bg-blue-50 hover:text-blue-600 rounded-none transition-colors"
+                                                        onClick={() => setDrillDownData({
+                                                            category: cat,
+                                                            periodLabel: key,
+                                                            expenses: periodExpenses
+                                                        })}
+                                                    >
+                                                        {formatCurrency(val)}
+                                                    </Button>
+                                                ) : (
+                                                    <span className="text-muted-foreground mr-4">-</span>
+                                                )}
                                             </TableCell>
                                         );
                                     })}
@@ -304,6 +338,56 @@ export function RollupTable({
                     </TableBody>
                 </Table>
             </div>
+
+            <Dialog open={!!drillDownData} onOpenChange={(open) => !open && setDrillDownData(null)}>
+                <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-xl">
+                            <ListFilter className="w-5 h-5 text-blue-600" />
+                            Transactions Details
+                        </DialogTitle>
+                        <DialogDescription>
+                            Showing <strong>{drillDownData?.expenses.length}</strong> transactions for
+                            <Badge variant="outline" className="mx-1 bg-slate-50">{drillDownData?.category}</Badge>
+                            in <strong>{drillDownData?.periodLabel}</strong>
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto mt-4 rounded-md border">
+                        <Table>
+                            <TableHeader className="bg-slate-50 sticky top-0 z-20">
+                                <TableRow>
+                                    <TableHead className="w-[100px]">Date</TableHead>
+                                    <TableHead>Payee/Payer</TableHead>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead className="text-right w-[150px]">Amount</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {drillDownData?.expenses.map((expense, idx) => (
+                                    <TableRow key={`${expense.rowId}-${idx}`}>
+                                        <TableCell className="whitespace-nowrap font-medium">
+                                            {expense.date}
+                                        </TableCell>
+                                        <TableCell className="max-w-[200px] truncate">
+                                            {expense.payeePayer || '-'}
+                                        </TableCell>
+                                        <TableCell className="text-muted-foreground italic">
+                                            {expense.description}
+                                        </TableCell>
+                                        <TableCell className="text-right font-semibold text-foreground">
+                                            {Math.abs(expense.amount).toLocaleString('en-IN', {
+                                                style: 'currency',
+                                                currency: 'INR'
+                                            })}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
