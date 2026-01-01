@@ -28,11 +28,14 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
         setToInput(filters.dateRange.to ? format(filters.dateRange.to, 'dd/MM/yyyy') : '');
     }, [filters.dateRange]);
 
+    const [focusedInput, setFocusedInput] = useState<'from' | 'to' | null>(null);
+
     const handleManualDateChange = (type: 'from' | 'to', value: string) => {
         if (type === 'from') setFromInput(value);
         else setToInput(value);
+    };
 
-        // Try multiple formats
+    const handleCommitDate = (type: 'from' | 'to', value: string) => {
         const formats = ['dd/MM/yyyy', 'dd-MM-yyyy', 'yyyy-MM-dd'];
         let parsedDate: Date | null = null;
 
@@ -52,7 +55,31 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
                     [type]: parsedDate
                 }
             }));
+        } else if (value === '') {
+            setFilters((prev: FilterState) => ({
+                ...prev,
+                dateRange: {
+                    ...prev.dateRange,
+                    [type]: undefined
+                }
+            }));
         }
+    };
+
+    const handleCalendarSelect = (date: Date | undefined) => {
+        if (!date) return;
+
+        // If we know which input was focused, update that one.
+        // Otherwise, use a smart range logic but don't clear the other if both exist.
+        const target = focusedInput || (filters.dateRange.from && !filters.dateRange.to ? 'to' : 'from');
+
+        setFilters((prev: FilterState) => ({
+            ...prev,
+            dateRange: {
+                ...prev.dateRange,
+                [target]: date
+            }
+        }));
     };
 
     const handleTimeRangeChange = (value: string) => {
@@ -173,6 +200,12 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
                                             placeholder="DD/MM/YYYY"
                                             value={fromInput}
                                             onChange={(e) => handleManualDateChange('from', e.target.value)}
+                                            onFocus={() => setFocusedInput('from')}
+                                            onBlur={(e) => {
+                                                handleCommitDate('from', e.target.value);
+                                                // Small delay to allow calendar click to process before clearing focus target
+                                                setTimeout(() => setFocusedInput(null), 200);
+                                            }}
                                             className="h-8 text-sm"
                                         />
                                     </div>
@@ -182,16 +215,22 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
                                             placeholder="DD/MM/YYYY"
                                             value={toInput}
                                             onChange={(e) => handleManualDateChange('to', e.target.value)}
+                                            onFocus={() => setFocusedInput('to')}
+                                            onBlur={(e) => {
+                                                handleCommitDate('to', e.target.value);
+                                                // Small delay to allow calendar click to process
+                                                setTimeout(() => setFocusedInput(null), 200);
+                                            }}
                                             className="h-8 text-sm"
                                         />
                                     </div>
                                 </div>
                                 <Calendar
                                     initialFocus
-                                    mode="range"
-                                    defaultMonth={filters.dateRange.from}
-                                    selected={{ from: filters.dateRange.from, to: filters.dateRange.to }}
-                                    onSelect={(range: any) => setFilters((prev: FilterState) => ({ ...prev, dateRange: { from: range?.from, to: range?.to } }))}
+                                    mode="single"
+                                    defaultMonth={filters.dateRange.from || new Date()}
+                                    selected={focusedInput === 'to' ? filters.dateRange.to : filters.dateRange.from}
+                                    onSelect={handleCalendarSelect}
                                     numberOfMonths={2}
                                     captionLayout="dropdown"
                                     fromYear={2000}
