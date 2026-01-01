@@ -20,7 +20,7 @@ import {
     parse
 } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftRight, CalendarRange, X, ListFilter } from 'lucide-react';
+import { ArrowLeftRight, CalendarRange, X, ListFilter, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -75,6 +75,46 @@ export function RollupTable({
         periodLabel: string;
         expenses: Expense[];
     } | null>(null);
+
+    const [modalSortConfig, setModalSortConfig] = useState<{
+        key: 'parsedDate' | 'payeePayer' | 'absAmount';
+        direction: 'asc' | 'desc';
+    }>({ key: 'parsedDate', direction: 'desc' });
+
+    const sortedDrillDownExpenses = useMemo(() => {
+        if (!drillDownData) return [];
+        return [...drillDownData.expenses].sort((a, b) => {
+            let aVal: any;
+            let bVal: any;
+
+            if (modalSortConfig.key === 'absAmount') {
+                aVal = Math.abs(a.amount);
+                bVal = Math.abs(b.amount);
+            } else if (modalSortConfig.key === 'parsedDate') {
+                aVal = a.parsedDate.getTime();
+                bVal = b.parsedDate.getTime();
+            } else {
+                aVal = (a[modalSortConfig.key] || '').toLowerCase();
+                bVal = (b[modalSortConfig.key] || '').toLowerCase();
+            }
+
+            if (aVal < bVal) return modalSortConfig.direction === 'asc' ? -1 : 1;
+            if (aVal > bVal) return modalSortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }, [drillDownData, modalSortConfig]);
+
+    const handleModalSort = (key: 'parsedDate' | 'payeePayer' | 'absAmount') => {
+        setModalSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+        }));
+    };
+
+    const getModalSortIcon = (key: string) => {
+        if (modalSortConfig.key !== key) return <ArrowUpDown className="ml-2 h-4 w-4 opacity-30" />;
+        return modalSortConfig.direction === 'asc' ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />;
+    };
 
     const periods = useMemo(() => {
         if (!dateRange) return [];
@@ -340,7 +380,7 @@ export function RollupTable({
             </div>
 
             <Dialog open={!!drillDownData} onOpenChange={(open) => !open && setDrillDownData(null)}>
-                <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+                <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-xl">
                             <ListFilter className="w-5 h-5 text-blue-600" />
@@ -357,14 +397,35 @@ export function RollupTable({
                         <Table>
                             <TableHeader className="bg-slate-50 sticky top-0 z-20">
                                 <TableRow>
-                                    <TableHead className="w-[100px]">Date</TableHead>
-                                    <TableHead>Payee/Payer</TableHead>
+                                    <TableHead
+                                        className="w-[120px] cursor-pointer hover:bg-slate-100 transition-colors"
+                                        onClick={() => handleModalSort('parsedDate')}
+                                    >
+                                        <div className="flex items-center">
+                                            Date {getModalSortIcon('parsedDate')}
+                                        </div>
+                                    </TableHead>
+                                    <TableHead
+                                        className="cursor-pointer hover:bg-slate-100 transition-colors"
+                                        onClick={() => handleModalSort('payeePayer')}
+                                    >
+                                        <div className="flex items-center">
+                                            Payee/Payer {getModalSortIcon('payeePayer')}
+                                        </div>
+                                    </TableHead>
                                     <TableHead>Description</TableHead>
-                                    <TableHead className="text-right w-[150px]">Amount</TableHead>
+                                    <TableHead
+                                        className="text-right w-[150px] cursor-pointer hover:bg-slate-100 transition-colors"
+                                        onClick={() => handleModalSort('absAmount')}
+                                    >
+                                        <div className="flex items-center justify-end">
+                                            Amount {getModalSortIcon('absAmount')}
+                                        </div>
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {drillDownData?.expenses.map((expense, idx) => (
+                                {sortedDrillDownExpenses.map((expense, idx) => (
                                     <TableRow key={`${expense.rowId}-${idx}`}>
                                         <TableCell className="whitespace-nowrap font-medium">
                                             {expense.date}
