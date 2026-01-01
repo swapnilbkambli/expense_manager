@@ -130,27 +130,32 @@ export function RollupTable({
         }
     }, [filters.dateRange, dateRange, mode]);
 
+    const grouping = useMemo(() => {
+        return activeCategories.length === 1 ? 'subcategory' : 'category';
+    }, [activeCategories.length]);
+
     const data = useMemo(() => {
-        const categoriesList = Array.from(new Set(expenseOnly.map(e => e.category))).sort();
+        const rowsList = Array.from(new Set(expenseOnly.map(e => grouping === 'category' ? e.category : (e.subcategory || 'Other')))).sort();
         const rollup: Record<string, Record<string, number>> = {};
 
-        categoriesList.forEach(cat => {
-            rollup[cat] = {};
+        rowsList.forEach(row => {
+            rollup[row] = {};
             periods.forEach(p => {
                 const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
-                rollup[cat][key] = 0;
+                rollup[row][key] = 0;
             });
         });
 
         expenseOnly.forEach(e => {
             const periodKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
-            if (rollup[e.category] && rollup[e.category].hasOwnProperty(periodKey)) {
-                rollup[e.category][periodKey] += Math.abs(e.amount);
+            const rowValue = grouping === 'category' ? e.category : (e.subcategory || 'Other');
+            if (rollup[rowValue] && rollup[rowValue].hasOwnProperty(periodKey)) {
+                rollup[rowValue][periodKey] += Math.abs(e.amount);
             }
         });
 
-        return { rows: categoriesList, rollup };
-    }, [expenseOnly, periods, mode]);
+        return { rows: rowsList, rollup };
+    }, [expenseOnly, periods, mode, grouping]);
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('en-IN', {
@@ -286,7 +291,7 @@ export function RollupTable({
                 </div>
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
                     <CalendarRange className="w-3 h-3" />
-                    {mode === 'yearly' ? 'Yearly' : 'Monthly'} aggregation
+                    {mode === 'yearly' ? 'Yearly' : 'Monthly'} aggregation by {grouping === 'category' ? 'Category' : 'Subcategory'}
                 </div>
             </div>
 
@@ -295,7 +300,7 @@ export function RollupTable({
                     <TableHeader className="bg-slate-50">
                         <TableRow>
                             <TableHead className="font-bold min-w-[200px] sticky left-0 bg-slate-50 z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                                Category
+                                {grouping === 'category' ? 'Category' : 'Subcategory'}
                             </TableHead>
                             {periods.map(p => (
                                 <TableHead key={p.getTime()} className="text-right font-bold whitespace-nowrap px-4">
@@ -322,7 +327,8 @@ export function RollupTable({
 
                                         const periodExpenses = expenseOnly.filter(e => {
                                             const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
-                                            return e.category === rowVal && pKey === key;
+                                            const eRowVal = grouping === 'category' ? e.category : (e.subcategory || 'Other');
+                                            return eRowVal === rowVal && pKey === key;
                                         });
 
                                         return (
@@ -385,7 +391,7 @@ export function RollupTable({
             </div>
 
             <Dialog open={!!drillDownData} onOpenChange={(open) => !open && setDrillDownData(null)}>
-                <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-hidden flex flex-col p-6">
+                <DialogContent className="max-w-[95vw] w-full sm:max-w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-6">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-xl">
                             <ListFilter className="w-5 h-5 text-blue-600" />
