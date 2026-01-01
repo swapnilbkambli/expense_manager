@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useMemo, useState } from 'react';
 import { Expense } from '@/lib/types/expense';
 import {
     Table,
@@ -9,11 +10,10 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { useMemo, useState } from 'react';
 import { differenceInMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { FilterState } from '@/lib/types/expense';
 import { cn } from '@/lib/utils';
 
@@ -26,52 +26,78 @@ interface AveragesTableProps {
 
 export function AveragesTable({ expenses, onToggleCategory, onToggleSubcategory, filters }: AveragesTableProps) {
     const [localSearch, setLocalSearch] = useState('');
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
-    const rawData = useMemo(() => {
+    const toggleExpand = (category: string) => {
+        const newSet = new Set(expandedCategories);
+        if (newSet.has(category)) {
+            newSet.delete(category);
+        } else {
+            newSet.add(category);
+        }
+        setExpandedCategories(newSet);
+    };
+
+    const hierarchicalData = useMemo(() => {
         const expenseRecords = expenses.filter((e) => e.amount < 0);
         if (expenseRecords.length === 0) return [];
 
-        // Grouping
-        const groupings: { [key: string]: { total: number; count: number } } = {};
-
-        // Sort to get date range for average calculation
+        // Sort to get date range
         const sorted = [...expenseRecords].sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime());
         const startDate = sorted[0].parsedDate;
         const endDate = sorted[sorted.length - 1].parsedDate;
         const monthsRange = Math.max(1, differenceInMonths(endOfMonth(endDate), startOfMonth(startDate)) + 1);
 
-        expenseRecords.forEach((e) => {
-            const key = `${e.category} > ${e.subcategory || 'Other'}`;
-            if (!groupings[key]) {
-                groupings[key] = { total: 0, count: 0 };
+        const categoryMap: {
+            [key: string]: {
+                total: number;
+                count: number;
+                subcategories: { [key: string]: { total: number; count: number } }
             }
-            groupings[key].total += Math.abs(e.amount);
-            groupings[key].count += 1;
+        } = {};
+
+        expenseRecords.forEach((e) => {
+            if (!categoryMap[e.category]) {
+                categoryMap[e.category] = { total: 0, count: 0, subcategories: {} };
+            }
+            categoryMap[e.category].total += Math.abs(e.amount);
+            categoryMap[e.category].count += 1;
+
+            const sub = e.subcategory || 'Other';
+            if (!categoryMap[e.category].subcategories[sub]) {
+                categoryMap[e.category].subcategories[sub] = { total: 0, count: 0 };
+            }
+            categoryMap[e.category].subcategories[sub].total += Math.abs(e.amount);
+            categoryMap[e.category].subcategories[sub].count += 1;
         });
 
-        return Object.entries(groupings)
-            .map(([key, value]) => {
-                const [category, subcategory] = key.split(' > ');
-                return {
-                    category,
-                    subcategory,
-                    total: value.total,
-                    avg: value.total / monthsRange,
-                    count: value.count,
-                };
-            })
+        return Object.entries(categoryMap)
+            .map(([category, data]) => ({
+                category,
+                total: data.total,
+                avg: data.total / monthsRange,
+                count: data.count,
+                subcategories: Object.entries(data.subcategories)
+                    .map(([subcategory, subData]) => ({
+                        subcategory,
+                        total: subData.total,
+                        avg: subData.total / monthsRange,
+                        count: subData.count,
+                    }))
+                    .sort((a, b) => b.avg - a.avg),
+            }))
             .sort((a, b) => b.avg - a.avg);
     }, [expenses]);
 
     const filteredData = useMemo(() => {
-        if (!localSearch) return rawData;
+        if (!localSearch) return hierarchicalData;
         const search = localSearch.toLowerCase();
-        return rawData.filter(
-            (row) =>
-                row.category.toLowerCase().includes(search) ||
-                row.subcategory.toLowerCase().includes(search)
-        );
-    }, [rawData, localSearch]);
+        return hierarchicalData.filter((cat) => {
+            const catMatch = cat.category.toLowerCase().includes(search);
+            const subMatch = cat.subcategories.some(s => s.subcategory.toLowerCase().includes(search));
+            return catMatch || subMatch;
+        });
+    }, [hierarchicalData, localSearch]);
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('en-IN', {
@@ -81,7 +107,7 @@ export function AveragesTable({ expenses, onToggleCategory, onToggleSubcategory,
         }).format(value);
     };
 
-    if (rawData.length === 0) return null;
+    if (hierarchicalData.length === 0) return null;
 
     return (
         <div className="space-y-4">
@@ -108,59 +134,93 @@ export function AveragesTable({ expenses, onToggleCategory, onToggleSubcategory,
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredData.map((row, index) => {
-                            const categoryActive = filters.categories.includes(row.category);
-                            const subcategoryActive = filters.subcategories.includes(row.subcategory);
-                            const rowActive = categoryActive || subcategoryActive;
+                        {filteredData.map((categoryRow, catIndex) => {
+                            const categoryActive = filters.categories.includes(categoryRow.category);
+                            const isExpanded = expandedCategories.has(categoryRow.category);
 
                             return (
-                                <TableRow
-                                    key={index}
-                                    className={cn(
-                                        "hover:bg-slate-50/50 transition-colors",
-                                        rowActive && "bg-blue-50/30"
-                                    )}
-                                >
-                                    <TableCell>
-                                        <Checkbox
-                                            checked={rowActive}
-                                            onCheckedChange={() => {
-                                                // If subcategory exists, toggle it
-                                                if (row.subcategory && row.subcategory !== 'Other') {
-                                                    onToggleSubcategory?.(row.subcategory);
-                                                } else {
-                                                    onToggleCategory?.(row.category);
-                                                }
-                                            }}
-                                        />
-                                    </TableCell>
-                                    <TableCell className="font-medium text-slate-900">
-                                        <span
-                                            className="cursor-pointer hover:underline"
-                                            onClick={() => onToggleCategory?.(row.category)}
-                                        >
-                                            {row.category}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell className="text-slate-500">
-                                        <span
-                                            className="cursor-pointer hover:underline"
-                                            onClick={() => row.subcategory !== 'Other' && onToggleSubcategory?.(row.subcategory)}
-                                        >
-                                            {row.subcategory}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell className="text-right font-bold text-blue-600">{formatCurrency(row.avg)}</TableCell>
-                                    <TableCell className="text-right text-slate-600">{formatCurrency(row.total)}</TableCell>
-                                    <TableCell className="text-right text-slate-400 text-xs">{row.count}</TableCell>
-                                </TableRow>
+                                <React.Fragment key={categoryRow.category}>
+                                    <TableRow
+                                        className={cn(
+                                            "hover:bg-slate-50 transition-colors",
+                                            categoryActive && "bg-blue-50/40"
+                                        )}
+                                    >
+                                        <TableCell>
+                                            <Checkbox
+                                                checked={categoryActive}
+                                                onCheckedChange={() => onToggleCategory?.(categoryRow.category)}
+                                            />
+                                        </TableCell>
+                                        <TableCell colSpan={2} className="font-bold text-slate-900 py-3">
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => toggleExpand(categoryRow.category)}
+                                                    className="p-0.5 hover:bg-slate-200 rounded transition-colors"
+                                                >
+                                                    {isExpanded ? (
+                                                        <ChevronDown className="w-4 h-4 text-slate-500" />
+                                                    ) : (
+                                                        <ChevronRight className="w-4 h-4 text-slate-500" />
+                                                    )}
+                                                </button>
+                                                <span
+                                                    className="cursor-pointer hover:underline"
+                                                    onClick={() => onToggleCategory?.(categoryRow.category)}
+                                                >
+                                                    {categoryRow.category}
+                                                </span>
+                                                <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full font-normal">
+                                                    {categoryRow.subcategories.length} subs
+                                                </span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right font-bold text-blue-700">{formatCurrency(categoryRow.avg)}</TableCell>
+                                        <TableCell className="text-right text-slate-600 font-medium">{formatCurrency(categoryRow.total)}</TableCell>
+                                        <TableCell className="text-right text-slate-400 text-xs">{categoryRow.count}</TableCell>
+                                    </TableRow>
+
+                                    {isExpanded && categoryRow.subcategories.map((sub, subIndex) => {
+                                        const subActive = filters.subcategories.includes(sub.subcategory);
+                                        return (
+                                            <TableRow
+                                                key={`${categoryRow.category}-${sub.subcategory}`}
+                                                className={cn(
+                                                    "bg-slate-50/30 hover:bg-slate-50 transition-colors",
+                                                    subActive && "bg-blue-50/20"
+                                                )}
+                                            >
+                                                <TableCell className="pl-8">
+                                                    <Checkbox
+                                                        checked={subActive}
+                                                        onCheckedChange={() => onToggleSubcategory?.(sub.subcategory)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell className="pl-4 text-slate-400 text-xs w-[40px]">
+                                                    └─
+                                                </TableCell>
+                                                <TableCell className="text-slate-600 font-medium translate-x-[-15px]">
+                                                    <span
+                                                        className="cursor-pointer hover:underline"
+                                                        onClick={() => onToggleSubcategory?.(sub.subcategory)}
+                                                    >
+                                                        {sub.subcategory}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="text-right text-blue-500 font-semibold">{formatCurrency(sub.avg)}</TableCell>
+                                                <TableCell className="text-right text-slate-500 text-sm">{formatCurrency(sub.total)}</TableCell>
+                                                <TableCell className="text-right text-slate-300 text-[10px]">{sub.count}</TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                </React.Fragment>
                             );
                         })}
                     </TableBody>
                 </Table>
             </div>
             <p className="text-xs text-muted-foreground italic px-1">
-                * Monthly average calculated based on the selected time range.
+                * Monthly average calculated based on aggregated spend across the selected time range.
             </p>
         </div>
     );

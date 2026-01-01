@@ -79,6 +79,21 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
         });
     };
 
+    const handleSelectAllCategories = (select: boolean) => {
+        setFilters((prev: FilterState) => ({
+            ...prev,
+            categories: select ? [...categories] : [],
+            subcategories: [] // Reset subcategories when categories change significantly
+        }));
+    };
+
+    const handleSelectAllSubcategories = (select: boolean) => {
+        setFilters((prev: FilterState) => ({
+            ...prev,
+            subcategories: select ? [...subcategories] : []
+        }));
+    };
+
     const resetFilters = () => {
         setFilters((prev: FilterState) => ({
             ...prev,
@@ -209,7 +224,23 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-0" align="start">
                         <div className="p-4 space-y-3">
-                            <h4 className="font-medium leading-none">Filter Categories</h4>
+                            <div className="flex items-center justify-between">
+                                <h4 className="font-medium leading-none">Categories</h4>
+                                <div className="flex gap-2">
+                                    <button
+                                        className="text-[10px] uppercase font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                                        onClick={() => handleSelectAllCategories(true)}
+                                    >
+                                        Select All
+                                    </button>
+                                    <button
+                                        className="text-[10px] uppercase font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                                        onClick={() => handleSelectAllCategories(false)}
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
                             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                                 {categories.map((cat) => (
                                     <div key={cat} className="flex items-center space-x-2">
@@ -242,7 +273,23 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-0" align="start">
                         <div className="p-4 space-y-3">
-                            <h4 className="font-medium leading-none">Filter Subcategories</h4>
+                            <div className="flex items-center justify-between">
+                                <h4 className="font-medium leading-none">Subcategories</h4>
+                                <div className="flex gap-2">
+                                    <button
+                                        className="text-[10px] uppercase font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                                        onClick={() => handleSelectAllSubcategories(true)}
+                                    >
+                                        Select All
+                                    </button>
+                                    <button
+                                        className="text-[10px] uppercase font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                                        onClick={() => handleSelectAllSubcategories(false)}
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
                             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                                 {subcategories.map((sub) => (
                                     <div key={sub} className="flex items-center space-x-2">
