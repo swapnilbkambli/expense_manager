@@ -228,8 +228,8 @@ export default function ExpenseDashboard() {
                         <button
                             onClick={() => setViewMode('list')}
                             className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'list'
-                                    ? 'bg-white text-blue-600 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-white text-blue-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
                                 }`}
                         >
                             Detailed List
@@ -237,8 +237,8 @@ export default function ExpenseDashboard() {
                         <button
                             onClick={() => setViewMode('rollup')}
                             className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'rollup'
-                                    ? 'bg-white text-blue-600 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-white text-blue-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
                                 }`}
                         >
                             Roll-up View
@@ -259,6 +259,10 @@ export default function ExpenseDashboard() {
                         <RollupTable
                             expenses={filteredExpenses}
                             filters={filters}
+                            onToggleCategory={toggleCategory}
+                            onToggleSubcategory={toggleSubcategory}
+                            categories={categories}
+                            subcategories={subcategories}
                         />
                     )}
                 </CardContent>
