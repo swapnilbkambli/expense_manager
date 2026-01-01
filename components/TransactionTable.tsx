@@ -11,25 +11,62 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface TransactionTableProps {
     expenses: Expense[];
     onToggleCategory?: (category: string) => void;
 }
 
-const ITEMS_PER_PAGE = 10;
+type SortConfig = {
+    key: keyof Expense | 'absAmount';
+    direction: 'asc' | 'desc';
+} | null;
 
 export function TransactionTable({ expenses, onToggleCategory }: TransactionTableProps) {
     const [currentPage, setCurrentPage] = useState(1);
+    const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'parsedDate', direction: 'desc' });
+    const itemsPerPage = 10;
 
-    const sortedExpenses = [...expenses].sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime());
+    const sortedExpenses = useMemo(() => {
+        if (!sortConfig) return expenses;
 
-    const totalPages = Math.ceil(sortedExpenses.length / ITEMS_PER_PAGE);
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const paginatedExpenses = sortedExpenses.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+        return [...expenses].sort((a, b) => {
+            let aValue: any = a[sortConfig.key as keyof Expense];
+            let bValue: any = b[sortConfig.key as keyof Expense];
+
+            if (sortConfig.key === 'absAmount') {
+                aValue = Math.abs(a.amount);
+                bValue = Math.abs(b.amount);
+            } else if (sortConfig.key === 'parsedDate') {
+                aValue = a.parsedDate.getTime();
+                bValue = b.parsedDate.getTime();
+            }
+
+            if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }, [expenses, sortConfig]);
+
+    const totalPages = Math.ceil(sortedExpenses.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedExpenses = sortedExpenses.slice(startIndex, startIndex + itemsPerPage);
+
+    const requestSort = (key: keyof Expense | 'absAmount') => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const getSortIcon = (key: keyof Expense | 'absAmount') => {
+        if (!sortConfig || sortConfig.key !== key) return <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />;
+        return sortConfig.direction === 'asc' ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />;
+    };
 
     return (
         <div className="space-y-4">
@@ -37,11 +74,46 @@ export function TransactionTable({ expenses, onToggleCategory }: TransactionTabl
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Subcategory</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead
+                                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                                onClick={() => requestSort('parsedDate')}
+                            >
+                                <div className="flex items-center">
+                                    Date {getSortIcon('parsedDate')}
+                                </div>
+                            </TableHead>
+                            <TableHead
+                                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                                onClick={() => requestSort('category')}
+                            >
+                                <div className="flex items-center">
+                                    Category {getSortIcon('category')}
+                                </div>
+                            </TableHead>
+                            <TableHead
+                                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                                onClick={() => requestSort('subcategory')}
+                            >
+                                <div className="flex items-center">
+                                    Subcategory {getSortIcon('subcategory')}
+                                </div>
+                            </TableHead>
+                            <TableHead
+                                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                                onClick={() => requestSort('description')}
+                            >
+                                <div className="flex items-center">
+                                    Description {getSortIcon('description')}
+                                </div>
+                            </TableHead>
+                            <TableHead
+                                className="text-right cursor-pointer hover:bg-slate-50 transition-colors"
+                                onClick={() => requestSort('absAmount')}
+                            >
+                                <div className="flex items-center justify-end">
+                                    Amount {getSortIcon('absAmount')}
+                                </div>
+                            </TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -78,7 +150,7 @@ export function TransactionTable({ expenses, onToggleCategory }: TransactionTabl
 
             <div className="flex items-center justify-between px-2">
                 <p className="text-sm text-muted-foreground">
-                    Showing {startIndex + 1} to {Math.min(startIndex + ITEMS_PER_PAGE, sortedExpenses.length)} of {sortedExpenses.length} transactions
+                    Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, sortedExpenses.length)} of {sortedExpenses.length} transactions
                 </p>
                 <div className="flex items-center space-x-2">
                     <Button

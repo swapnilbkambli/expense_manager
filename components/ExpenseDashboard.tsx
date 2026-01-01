@@ -12,6 +12,7 @@ import { TrendChart } from './Charts/TrendChart';
 import { CategoryDonut } from './Charts/CategoryDonut';
 import { SubcategoryBar } from './Charts/SubcategoryBar';
 import { AveragesTable } from './AveragesTable';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Upload, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +26,22 @@ export default function ExpenseDashboard() {
         subcategories: [],
         searchQuery: '',
     });
+
+    useEffect(() => {
+        // Load default CSV on mount
+        const loadDefaultData = async () => {
+            try {
+                const response = await fetch('/data.csv');
+                if (!response.ok) throw new Error('Default data not found');
+                const csvText = await response.text();
+                const parsed = await parseExpenseCSV(csvText);
+                setAllExpenses(parsed);
+            } catch (error) {
+                console.error('Error loading default data:', error);
+            }
+        };
+        loadDefaultData();
+    }, []);
 
     const filteredExpenses = useMemo(() => {
         return filterExpenses(allExpenses, filters);
@@ -104,9 +121,20 @@ export default function ExpenseDashboard() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Financial Dashboard</h1>
-                    <p className="text-muted-foreground">Detailed overview of your income and expenses.</p>
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Personal Expense Analytics</h1>
+                    {allExpenses.length > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                            Showing results from{' '}
+                            <span className="font-medium text-slate-700">
+                                {filters.dateRange.from ? format(filters.dateRange.from, 'dd MMM yyyy') : format(new Date(Math.min(...allExpenses.map(e => e.parsedDate.getTime()))), 'dd MMM yyyy')}
+                            </span>
+                            {' '}to{' '}
+                            <span className="font-medium text-slate-700">
+                                {filters.dateRange.to ? format(filters.dateRange.to, 'dd MMM yyyy') : format(new Date(Math.max(...allExpenses.map(e => e.parsedDate.getTime()))), 'dd MMM yyyy')}
+                            </span>
+                        </p>
+                    )}
                 </div>
                 <div className="flex gap-2">
                     <input
