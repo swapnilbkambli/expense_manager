@@ -13,11 +13,15 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface TransactionTableProps {
     expenses: Expense[];
     onToggleCategory?: (category: string) => void;
+    categories?: string[];
+    subcategories?: string[];
 }
 
 type SortConfig = {
@@ -25,15 +29,25 @@ type SortConfig = {
     direction: 'asc' | 'desc';
 } | null;
 
-export function TransactionTable({ expenses, onToggleCategory }: TransactionTableProps) {
+export function TransactionTable({ expenses, onToggleCategory, categories, subcategories }: TransactionTableProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'parsedDate', direction: 'desc' });
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
     const itemsPerPage = 10;
 
-    const sortedExpenses = useMemo(() => {
-        if (!sortConfig) return expenses;
+    const locallyFilteredExpenses = useMemo(() => {
+        return expenses.filter(e => {
+            const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(e.category);
+            const subcategoryMatch = selectedSubcategories.length === 0 || selectedSubcategories.includes(e.subcategory);
+            return categoryMatch && subcategoryMatch;
+        });
+    }, [expenses, selectedCategories, selectedSubcategories]);
 
-        return [...expenses].sort((a, b) => {
+    const sortedExpenses = useMemo(() => {
+        if (!sortConfig) return locallyFilteredExpenses;
+
+        return [...locallyFilteredExpenses].sort((a, b) => {
             let aValue: any = a[sortConfig.key as keyof Expense];
             let bValue: any = b[sortConfig.key as keyof Expense];
 
@@ -68,8 +82,112 @@ export function TransactionTable({ expenses, onToggleCategory }: TransactionTabl
         return sortConfig.direction === 'asc' ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />;
     };
 
+    const toggleLocalCategory = (cat: string) => {
+        setSelectedCategories((prev: string[]) =>
+            prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+        );
+        setCurrentPage(1);
+    };
+
+    const toggleLocalSubcategory = (sub: string) => {
+        setSelectedSubcategories((prev: string[]) =>
+            prev.includes(sub) ? prev.filter(s => s !== sub) : [...prev, sub]
+        );
+        setCurrentPage(1);
+    };
+
     return (
         <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 mb-2">
+                {categories && categories.length > 0 && (
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8">
+                                Filter Categories {selectedCategories.length > 0 && `(${selectedCategories.length})`}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56 p-2" align="start">
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                <div className="flex items-center justify-between mb-2 pb-2 border-b">
+                                    <span className="text-xs font-semibold">Filter Category</span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 text-[10px] uppercase font-bold text-slate-500"
+                                        onClick={() => setSelectedCategories([])}
+                                    >
+                                        Clear
+                                    </Button>
+                                </div>
+                                {categories.map(cat => (
+                                    <div key={cat} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
+                                        <Checkbox
+                                            id={`table-cat-${cat}`}
+                                            checked={selectedCategories.includes(cat)}
+                                            onCheckedChange={() => toggleLocalCategory(cat)}
+                                        />
+                                        <label htmlFor={`table-cat-${cat}`} className="text-sm font-normal cursor-pointer flex-1">
+                                            {cat}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                )}
+
+                {subcategories && subcategories.length > 0 && (
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8">
+                                Filter Subcategories {selectedSubcategories.length > 0 && `(${selectedSubcategories.length})`}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56 p-2" align="start">
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                <div className="flex items-center justify-between mb-2 pb-2 border-b">
+                                    <span className="text-xs font-semibold">Filter Subcategory</span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 text-[10px] uppercase font-bold text-slate-500"
+                                        onClick={() => setSelectedSubcategories([])}
+                                    >
+                                        Clear
+                                    </Button>
+                                </div>
+                                {subcategories.map(sub => (
+                                    <div key={sub} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
+                                        <Checkbox
+                                            id={`table-sub-${sub}`}
+                                            checked={selectedSubcategories.includes(sub)}
+                                            onCheckedChange={() => toggleLocalSubcategory(sub)}
+                                        />
+                                        <label htmlFor={`table-sub-${sub}`} className="text-sm font-normal cursor-pointer flex-1">
+                                            {sub}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                )}
+
+                {(selectedCategories.length > 0 || selectedSubcategories.length > 0) && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-red-500 hover:text-red-700"
+                        onClick={() => {
+                            setSelectedCategories([]);
+                            setSelectedSubcategories([]);
+                        }}
+                    >
+                        Reset Table Filters
+                        <X className="ml-2 h-4 w-4" />
+                    </Button>
+                )}
+            </div>
             <div className="rounded-md border">
                 <Table>
                     <TableHeader>

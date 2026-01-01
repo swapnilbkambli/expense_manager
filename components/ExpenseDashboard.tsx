@@ -194,8 +194,8 @@ export default function ExpenseDashboard() {
                 </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-1">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
                     <CardHeader>
                         <CardTitle className="text-lg font-medium">Monthly Averages</CardTitle>
                     </CardHeader>
@@ -209,7 +209,7 @@ export default function ExpenseDashboard() {
                     </CardContent>
                 </Card>
 
-                <Card className="lg:col-span-1">
+                <Card>
                     <CardHeader>
                         <CardTitle className="text-lg font-medium">Top Subcategories</CardTitle>
                     </CardHeader>
@@ -217,16 +217,21 @@ export default function ExpenseDashboard() {
                         <SubcategoryBar expenses={filteredExpenses} onToggleSubcategory={toggleSubcategory} />
                     </CardContent>
                 </Card>
-
-                <Card className="lg:col-span-1">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-medium">Transactions</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <TransactionTable expenses={filteredExpenses} onToggleCategory={toggleCategory} />
-                    </CardContent>
-                </Card>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg font-medium">Transactions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <TransactionTable
+                        expenses={filteredExpenses}
+                        onToggleCategory={toggleCategory}
+                        categories={categories}
+                        subcategories={subcategories}
+                    />
+                </CardContent>
+            </Card>
         </div>
     );
 }
