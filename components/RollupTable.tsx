@@ -19,16 +19,32 @@ import {
     isSameYear
 } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftRight, CalendarRange } from 'lucide-react';
+import { ArrowLeftRight, CalendarRange, X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface RollupTableProps {
     expenses: Expense[];
     filters: FilterState;
+    onToggleCategory?: (category: string) => void;
+    onToggleSubcategory?: (subcategory: string) => void;
+    categories?: string[];
+    subcategories?: string[];
 }
 
-export function RollupTable({ expenses, filters }: RollupTableProps) {
+export function RollupTable({
+    expenses,
+    filters,
+    onToggleCategory,
+    onToggleSubcategory,
+    categories,
+    subcategories
+}: RollupTableProps) {
     const expenseOnly = useMemo(() => expenses.filter(e => e.amount < 0), [expenses]);
 
+    // Use global filters if available
+    const activeCategories = filters?.categories || [];
+    const activeSubcategories = filters?.subcategories || [];
     // Auto-detect view mode based on date range if not manually set
     const dateRange = useMemo(() => {
         if (expenseOnly.length === 0) return null;
@@ -95,6 +111,101 @@ export function RollupTable({ expenses, filters }: RollupTableProps) {
 
     return (
         <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 mb-2">
+                {categories && categories.length > 0 && (
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8">
+                                Filter Categories {activeCategories.length > 0 && `(${activeCategories.length})`}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56 p-2" align="start">
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                <div className="flex items-center justify-between mb-2 pb-2 border-b">
+                                    <span className="text-xs font-semibold">Filter Category</span>
+                                    {activeCategories.length > 0 && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 text-[10px] uppercase font-bold text-slate-500"
+                                            onClick={() => activeCategories.forEach((cat: string) => onToggleCategory?.(cat))}
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
+                                </div>
+                                {categories.map(cat => (
+                                    <div key={cat} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
+                                        <Checkbox
+                                            id={`rollup-cat-${cat}`}
+                                            checked={activeCategories.includes(cat)}
+                                            onCheckedChange={() => onToggleCategory?.(cat)}
+                                        />
+                                        <label htmlFor={`rollup-cat-${cat}`} className="text-sm font-normal cursor-pointer flex-1">
+                                            {cat}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                )}
+
+                {subcategories && subcategories.length > 0 && (
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8">
+                                Filter Subcategories {activeSubcategories.length > 0 && `(${activeSubcategories.length})`}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56 p-2" align="start">
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                <div className="flex items-center justify-between mb-2 pb-2 border-b">
+                                    <span className="text-xs font-semibold">Filter Subcategory</span>
+                                    {activeSubcategories.length > 0 && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 text-[10px] uppercase font-bold text-slate-500"
+                                            onClick={() => activeSubcategories.forEach((sub: string) => onToggleSubcategory?.(sub))}
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
+                                </div>
+                                {subcategories.map(sub => (
+                                    <div key={sub} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
+                                        <Checkbox
+                                            id={`rollup-sub-${sub}`}
+                                            checked={activeSubcategories.includes(sub)}
+                                            onCheckedChange={() => onToggleSubcategory?.(sub)}
+                                        />
+                                        <label htmlFor={`rollup-sub-${sub}`} className="text-sm font-normal cursor-pointer flex-1">
+                                            {sub}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                )}
+
+                {(activeCategories.length > 0 || activeSubcategories.length > 0) && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-red-500 hover:text-red-700"
+                        onClick={() => {
+                            activeCategories.forEach((cat: string) => onToggleCategory?.(cat));
+                            activeSubcategories.forEach((sub: string) => onToggleSubcategory?.(sub));
+                        }}
+                    >
+                        Reset All Filters
+                        <X className="ml-2 h-4 w-4" />
+                    </Button>
+                )}
+            </div>
+
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Button
