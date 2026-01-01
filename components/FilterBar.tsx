@@ -69,9 +69,8 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
     const handleCalendarSelect = (date: Date | undefined) => {
         if (!date) return;
 
-        // If we know which input was focused, update that one.
-        // Otherwise, use a smart range logic but don't clear the other if both exist.
-        const target = focusedInput || (filters.dateRange.from && !filters.dateRange.to ? 'to' : 'from');
+        // Use focusedInput if available, otherwise stay on 'from'
+        const target = focusedInput || 'from';
 
         setFilters((prev: FilterState) => ({
             ...prev,
