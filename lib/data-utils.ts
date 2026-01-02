@@ -1,7 +1,7 @@
-import { Expense, FilterState, DashboardMetrics } from './types/expense';
+import { Expense, FilterState, DashboardMetrics, CategoryMapping } from './types/expense';
 import { isWithinInterval, startOfYear, endOfYear, subDays, startOfMonth, endOfMonth, subYears } from 'date-fns';
 
-export const filterExpenses = (expenses: Expense[], filters: FilterState): Expense[] => {
+export const filterExpenses = (expenses: Expense[], filters: FilterState, categoryMapping: CategoryMapping = {}): Expense[] => {
     return expenses.filter((expense) => {
         // Date filtering (Independent From/To)
         const date = expense.parsedDate;
@@ -12,15 +12,31 @@ export const filterExpenses = (expenses: Expense[], filters: FilterState): Expen
             return false;
         }
 
-        // Category and Subcategory filtering (Intersection/AND relationship)
+        // Hierarchical Selection Logic
         const hasCategoryFilter = filters.categories.length > 0;
         const hasSubcategoryFilter = filters.subcategories.length > 0;
 
-        if (hasCategoryFilter && !filters.categories.includes(expense.category)) {
-            return false;
-        }
+        if (hasCategoryFilter || hasSubcategoryFilter) {
+            // Logic: Include expense if:
+            // 1. Its subcategory is explicitly selected (regardless of category)
+            // 2. Its category is selected AND none of the subcategories for THIS SPECIFIC category are selected (meaning "whole category" is intended)
 
-        if (hasSubcategoryFilter && !filters.subcategories.includes(expense.subcategory)) {
+            const isSubcatSelected = filters.subcategories.includes(expense.subcategory);
+            if (isSubcatSelected) return true;
+
+            const isCatSelected = filters.categories.includes(expense.category);
+            if (isCatSelected) {
+                // If the category is selected, we only include the expense if the user hasn't 
+                // refined this specific category by selecting other subcategories within it.
+                const subcategoriesForThisCat = categoryMapping[expense.category] || [];
+                const anySubcatFromThisCatSelected = subcategoriesForThisCat.some(s => filters.subcategories.includes(s));
+
+                if (!anySubcatFromThisCatSelected) {
+                    return true;
+                }
+            }
+
+            // If we have filters but this expense didn't match the hierarchical rules
             return false;
         }
 

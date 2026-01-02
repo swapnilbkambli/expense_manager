@@ -90,19 +90,45 @@ export function queryExpenses(filters?: FilterState): Expense[] {
             query += ' AND parsedDate <= @to';
             params.to = filters.dateRange.to.getTime();
         }
-        if (filters.categories.length > 0) {
-            const placeholders = filters.categories.map((_, i) => `@cat${i}`).join(',');
-            query += ` AND category IN (${placeholders})`;
-            filters.categories.forEach((cat, i) => {
-                params[`cat${i}`] = cat;
-            });
-        }
-        if (filters.subcategories.length > 0) {
-            const placeholders = filters.subcategories.map((_, i) => `@sub${i}`).join(',');
-            query += ` AND subcategory IN (${placeholders})`;
-            filters.subcategories.forEach((sub, i) => {
-                params[`sub${i}`] = sub;
-            });
+        if (filters.categories.length > 0 || filters.subcategories.length > 0) {
+            const conditions: string[] = [];
+
+            // 1. Subcategories always take precedence (Union across everything explicitly selected)
+            if (filters.subcategories.length > 0) {
+                const subPlaceholders = filters.subcategories.map((_, i) => `@sub${i}`).join(',');
+                conditions.push(`subcategory IN (${subPlaceholders})`);
+                filters.subcategories.forEach((sub, i) => {
+                    params[`sub${i}`] = sub;
+                });
+            }
+
+            // 2. Categories take effect if they are selected AND none of their subcategories are explicitly filtered.
+            // For simplicity in SQL (since we don't have the full mapping easily available in a single query),
+            // we will build a filter that says: (Category is X AND Subcategory is NOT in the list of selected subcategories)
+            // This effectively allows "Selection" to mean "The rest of this category".
+            if (filters.categories.length > 0) {
+                const catPlaceholders = filters.categories.map((_, i) => `@cat${i}`).join(',');
+                let catClause = `category IN (${catPlaceholders})`;
+
+                // If there are subcategory filters, we exclude them from the category match to prevent overlap
+                // and correctly implement the "Refinement" logic.
+                if (filters.subcategories.length > 0) {
+                    const subPlaceholders = filters.subcategories.map((_, i) => `@sub_ex${i}`).join(',');
+                    catClause += ` AND subcategory NOT IN (${subPlaceholders})`;
+                    filters.subcategories.forEach((sub, i) => {
+                        params[`sub_ex${i}`] = sub;
+                    });
+                }
+
+                conditions.push(`(${catClause})`);
+                filters.categories.forEach((cat, i) => {
+                    params[`cat${i}`] = cat;
+                });
+            }
+
+            if (conditions.length > 0) {
+                query += ` AND (${conditions.join(' OR ')})`;
+            }
         }
         if (filters.searchQuery) {
             query += ' AND (description LIKE @search OR payeePayer LIKE @search)';
