@@ -328,6 +328,7 @@ export default function ExpenseDashboard() {
                             categories={categories}
                             subcategories={subcategories}
                             categoryMapping={categoryMapping}
+                            onRefresh={refreshData}
                         />
                     )}
                 </CardContent>

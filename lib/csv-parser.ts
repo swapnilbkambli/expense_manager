@@ -2,14 +2,7 @@ import Papa from 'papaparse';
 import { parse, isValid } from 'date-fns';
 import { Expense } from './types/expense';
 
-const toTitleCase = (str: string) => {
-    if (!str) return '';
-    return str
-        .toLowerCase()
-        .split(' ')
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-};
+import { toTitleCase } from './data-utils';
 
 export const parseExpenseCSV = (csvString: string): Promise<Expense[]> => {
     return new Promise((resolve, reject) => {

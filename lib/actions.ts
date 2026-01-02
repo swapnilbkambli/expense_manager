@@ -6,6 +6,7 @@ import Papa from 'papaparse';
 import { parseExpenseCSV } from './csv-parser';
 import { clearExpenses, bulkInsertExpenses, queryExpenses, updateExpense, getAllExpensesForExport } from './db';
 import { FilterState, Expense, CategoryMapping } from './types/expense';
+import { toTitleCase } from './data-utils';
 
 export async function getDefaultCSVData() {
     try {
@@ -114,11 +115,14 @@ export async function getCategoryMappingAction(): Promise<CategoryMapping> {
             if (!trimmedLine) return;
 
             if (trimmedLine.includes('/')) {
-                const [category, subcatsStr] = trimmedLine.split('/');
-                const subcategories = subcatsStr ? subcatsStr.split(',').map(s => s.trim()).filter(Boolean) : [];
-                mapping[category.trim()] = subcategories;
+                const [rawCategory, subcatsStr] = trimmedLine.split('/');
+                const category = toTitleCase(rawCategory.trim());
+                const subcategories = subcatsStr
+                    ? subcatsStr.split(',').map(s => toTitleCase(s.trim())).filter(Boolean)
+                    : [];
+                mapping[category] = subcategories;
             } else {
-                mapping[trimmedLine] = [];
+                mapping[toTitleCase(trimmedLine)] = [];
             }
         });
 

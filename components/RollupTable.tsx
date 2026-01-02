@@ -20,7 +20,7 @@ import {
     parse
 } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftRight, CalendarRange, X, ListFilter, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowLeftRight, CalendarRange, X, ListFilter, ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, ChevronDown, Edit } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -31,6 +31,7 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { EditTransactionModal } from './EditTransactionModal';
 
 interface RollupTableProps {
     expenses: Expense[];
@@ -40,6 +41,7 @@ interface RollupTableProps {
     categories?: string[];
     subcategories?: string[];
     categoryMapping: CategoryMapping;
+    onRefresh?: () => void;
 }
 
 export function RollupTable({
@@ -49,7 +51,8 @@ export function RollupTable({
     onToggleSubcategory,
     categories,
     subcategories,
-    categoryMapping
+    categoryMapping,
+    onRefresh
 }: RollupTableProps) {
     const expenseOnly = useMemo(() => expenses.filter(e => e.amount < 0), [expenses]);
 
@@ -72,11 +75,13 @@ export function RollupTable({
     }, [dateRange]);
 
     const [mode, setMode] = useState<'monthly' | 'yearly'>(defaultMode);
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
     const [drillDownData, setDrillDownData] = useState<{
         category: string;
         periodLabel: string;
         expenses: Expense[];
     } | null>(null);
+    const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
     const [modalSortConfig, setModalSortConfig] = useState<{
         key: 'parsedDate' | 'category' | 'subcategory' | 'payeePayer' | 'absAmount';
@@ -132,32 +137,57 @@ export function RollupTable({
         }
     }, [filters.dateRange, dateRange, mode]);
 
-    const grouping = useMemo(() => {
-        return activeCategories.length === 1 ? 'subcategory' : 'category';
-    }, [activeCategories.length]);
+    const toggleCategoryExpand = (cat: string) => {
+        const next = new Set(expandedCategories);
+        if (next.has(cat)) next.delete(cat);
+        else next.add(cat);
+        setExpandedCategories(next);
+    };
 
     const data = useMemo(() => {
-        const rowsList = Array.from(new Set(expenseOnly.map(e => grouping === 'category' ? e.category : (e.subcategory || 'Other')))).sort();
-        const rollup: Record<string, Record<string, number>> = {};
+        const catMap: Record<string, {
+            periodTotals: Record<string, number>;
+            subcategories: Record<string, Record<string, number>>;
+        }> = {};
 
-        rowsList.forEach(row => {
-            rollup[row] = {};
-            periods.forEach(p => {
-                const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
-                rollup[row][key] = 0;
-            });
-        });
+        const allPeriodKeys = periods.map(p =>
+            mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy')
+        );
 
         expenseOnly.forEach(e => {
+            const cat = e.category || 'Uncategorized';
+            const sub = e.subcategory || 'Other';
             const periodKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
-            const rowValue = grouping === 'category' ? e.category : (e.subcategory || 'Other');
-            if (rollup[rowValue] && rollup[rowValue].hasOwnProperty(periodKey)) {
-                rollup[rowValue][periodKey] += Math.abs(e.amount);
+
+            if (!catMap[cat]) {
+                catMap[cat] = {
+                    periodTotals: {},
+                    subcategories: {}
+                };
+                allPeriodKeys.forEach(pk => catMap[cat].periodTotals[pk] = 0);
+            }
+
+            if (!catMap[cat].subcategories[sub]) {
+                catMap[cat].subcategories[sub] = {};
+                allPeriodKeys.forEach(pk => catMap[cat].subcategories[sub][pk] = 0);
+            }
+
+            if (catMap[cat].periodTotals.hasOwnProperty(periodKey)) {
+                catMap[cat].periodTotals[periodKey] += Math.abs(e.amount);
+            }
+            if (catMap[cat].subcategories[sub].hasOwnProperty(periodKey)) {
+                catMap[cat].subcategories[sub][periodKey] += Math.abs(e.amount);
             }
         });
 
-        return { rows: rowsList, rollup };
-    }, [expenseOnly, periods, mode, grouping]);
+        const sortedCategories = Object.keys(catMap).sort((a, b) => {
+            const totalA = Object.values(catMap[a].periodTotals).reduce((sum, val) => sum + val, 0);
+            const totalB = Object.values(catMap[b].periodTotals).reduce((sum, val) => sum + val, 0);
+            return totalB - totalA;
+        });
+
+        return { categories: sortedCategories, catMap };
+    }, [expenseOnly, periods, mode]);
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('en-IN', {
@@ -301,7 +331,7 @@ export function RollupTable({
                 </div>
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
                     <CalendarRange className="w-3 h-3" />
-                    {mode === 'yearly' ? 'Yearly' : 'Monthly'} aggregation by {grouping === 'category' ? 'Category' : 'Subcategory'}
+                    {mode === 'yearly' ? 'Yearly' : 'Monthly'} aggregation (Hierarchical)
                 </div>
             </div>
 
@@ -310,7 +340,7 @@ export function RollupTable({
                     <TableHeader className="bg-slate-50">
                         <TableRow>
                             <TableHead className="font-bold min-w-[200px] sticky left-0 bg-slate-50 z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                                {grouping === 'category' ? 'Category' : 'Subcategory'}
+                                Category / Subcategory
                             </TableHead>
                             {periods.map(p => (
                                 <TableHead key={p.getTime()} className="text-right font-bold whitespace-nowrap px-4">
@@ -323,59 +353,128 @@ export function RollupTable({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {data.rows.map(rowVal => {
-                            let rowTotal = 0;
+                        {data.categories.map(cat => {
+                            const isExpanded = expandedCategories.has(cat);
+                            const catData = data.catMap[cat];
+                            let catTotal = 0;
+
                             return (
-                                <TableRow key={rowVal}>
-                                    <TableCell className="font-medium sticky left-0 bg-white z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                                        {rowVal}
-                                    </TableCell>
-                                    {periods.map(p => {
-                                        const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
-                                        const val = data.rollup[rowVal][key] || 0;
-                                        rowTotal += val;
+                                <React.Fragment key={cat}>
+                                    <TableRow className="bg-slate-50/50 hover:bg-slate-100 transition-colors group">
+                                        <TableCell className="font-bold sticky left-0 bg-slate-50 hover:bg-slate-100 z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] py-2">
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => toggleCategoryExpand(cat)}
+                                                    className="p-1 hover:bg-slate-200 rounded transition-colors"
+                                                >
+                                                    {isExpanded ? (
+                                                        <ChevronDown className="w-4 h-4 text-slate-500" />
+                                                    ) : (
+                                                        <ChevronRight className="w-4 h-4 text-slate-500" />
+                                                    )}
+                                                </button>
+                                                <span
+                                                    className="cursor-pointer hover:underline text-slate-900"
+                                                    onClick={() => toggleCategoryExpand(cat)}
+                                                >
+                                                    {cat}
+                                                </span>
+                                            </div>
+                                        </TableCell>
+                                        {periods.map(p => {
+                                            const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
+                                            const val = catData.periodTotals[key] || 0;
+                                            catTotal += val;
 
-                                        const periodExpenses = expenseOnly.filter(e => {
-                                            const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
-                                            const eRowVal = grouping === 'category' ? e.category : (e.subcategory || 'Other');
-                                            return eRowVal === rowVal && pKey === key;
-                                        });
+                                            const periodExpenses = expenseOnly.filter(e => {
+                                                const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
+                                                return e.category === cat && pKey === key;
+                                            });
 
+                                            return (
+                                                <TableCell key={p.getTime()} className="text-right p-0">
+                                                    {val > 0 ? (
+                                                        <Button
+                                                            variant="ghost"
+                                                            className="w-full justify-end h-10 font-bold hover:bg-blue-50 hover:text-blue-600 rounded-none transition-colors"
+                                                            onClick={() => setDrillDownData({
+                                                                category: cat,
+                                                                periodLabel: key,
+                                                                expenses: periodExpenses
+                                                            })}
+                                                        >
+                                                            {formatCurrency(val)}
+                                                        </Button>
+                                                    ) : (
+                                                        <span className="text-muted-foreground mr-4 opacity-30 text-xs">-</span>
+                                                    )}
+                                                </TableCell>
+                                            );
+                                        })}
+                                        <TableCell className="text-right font-bold bg-blue-50/50 text-blue-800 pr-4">
+                                            {formatCurrency(catTotal)}
+                                        </TableCell>
+                                    </TableRow>
+
+                                    {isExpanded && Object.keys(catData.subcategories).sort().map(sub => {
+                                        let subTotal = 0;
+                                        const subData = catData.subcategories[sub];
                                         return (
-                                            <TableCell key={p.getTime()} className="text-right p-0">
-                                                {val > 0 ? (
-                                                    <Button
-                                                        variant="ghost"
-                                                        className="w-full justify-end h-10 font-normal hover:bg-blue-50 hover:text-blue-600 rounded-none transition-colors"
-                                                        onClick={() => setDrillDownData({
-                                                            category: rowVal,
-                                                            periodLabel: key,
-                                                            expenses: periodExpenses
-                                                        })}
-                                                    >
-                                                        {formatCurrency(val)}
-                                                    </Button>
-                                                ) : (
-                                                    <span className="text-muted-foreground mr-4">-</span>
-                                                )}
-                                            </TableCell>
+                                            <TableRow key={`${cat}-${sub}`} className="bg-white hover:bg-slate-50 transition-colors group">
+                                                <TableCell className="font-medium pl-10 sticky left-0 bg-white z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] py-1.5 transition-all text-xs">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-slate-400 group-hover:text-blue-500 transition-colors">└─</span>
+                                                        <span className="text-slate-600 group-hover:text-slate-900">{sub}</span>
+                                                    </div>
+                                                </TableCell>
+                                                {periods.map(p => {
+                                                    const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
+                                                    const val = subData[key] || 0;
+                                                    subTotal += val;
+
+                                                    const periodExpenses = expenseOnly.filter(e => {
+                                                        const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
+                                                        return e.category === cat && (e.subcategory || 'Other') === sub && pKey === key;
+                                                    });
+
+                                                    return (
+                                                        <TableCell key={p.getTime()} className="text-right p-0 border-l border-slate-50/10">
+                                                            {val > 0 ? (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    className="w-full justify-end h-8 text-xs font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-500 rounded-none transition-colors px-4"
+                                                                    onClick={() => setDrillDownData({
+                                                                        category: `${cat} > ${sub}`,
+                                                                        periodLabel: key,
+                                                                        expenses: periodExpenses
+                                                                    })}
+                                                                >
+                                                                    {formatCurrency(val)}
+                                                                </Button>
+                                                            ) : (
+                                                                <span className="text-slate-200 mr-4 text-[10px]">-</span>
+                                                            )}
+                                                        </TableCell>
+                                                    );
+                                                })}
+                                                <TableCell className="text-right font-semibold text-blue-600/60 pr-4 text-xs bg-blue-50/10">
+                                                    {formatCurrency(subTotal)}
+                                                </TableCell>
+                                            </TableRow>
                                         );
                                     })}
-                                    <TableCell className="text-right font-bold bg-blue-50/30 text-blue-700 pr-4">
-                                        {formatCurrency(rowTotal)}
-                                    </TableCell>
-                                </TableRow>
+                                </React.Fragment>
                             );
                         })}
-                        <TableRow className="bg-slate-100/50 font-bold">
-                            <TableCell className="sticky left-0 bg-slate-100/50 z-10 border-r">
+                        <TableRow className="bg-slate-100 font-bold">
+                            <TableCell className="sticky left-0 bg-slate-100 z-10 border-r">
                                 TOTAL
                             </TableCell>
                             {periods.map(p => {
                                 const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
                                 let colTotal = 0;
-                                data.rows.forEach(row => {
-                                    colTotal += data.rollup[row][key] || 0;
+                                data.categories.forEach(cat => {
+                                    colTotal += data.catMap[cat].periodTotals[key] || 0;
                                 });
                                 return (
                                     <TableCell key={p.getTime()} className="text-right pr-4">
@@ -388,8 +487,8 @@ export function RollupTable({
                                     periods.reduce((acc, p) => {
                                         const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
                                         let colTotal = 0;
-                                        data.rows.forEach(row => {
-                                            colTotal += data.rollup[row][key] || 0;
+                                        data.categories.forEach(cat => {
+                                            colTotal += data.catMap[cat].periodTotals[key] || 0;
                                         });
                                         return acc + colTotal;
                                     }, 0)
@@ -459,6 +558,7 @@ export function RollupTable({
                                             Amount {getModalSortIcon('absAmount')}
                                         </div>
                                     </TableHead>
+                                    <TableHead className="w-[80px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -485,6 +585,16 @@ export function RollupTable({
                                                 currency: 'INR'
                                             })}
                                         </TableCell>
+                                        <TableCell>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                                                onClick={() => setEditingExpense(expense)}
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -492,6 +602,21 @@ export function RollupTable({
                     </div>
                 </DialogContent>
             </Dialog>
-        </div >
+
+            {editingExpense && (
+                <EditTransactionModal
+                    expense={editingExpense}
+                    isOpen={!!editingExpense}
+                    onClose={() => setEditingExpense(null)}
+                    onSuccess={() => {
+                        setEditingExpense(null);
+                        onRefresh?.();
+                    }}
+                    categories={categories || []}
+                    subcategories={subcategories || []}
+                    categoryMapping={categoryMapping}
+                />
+            )}
+        </div>
     );
 }

@@ -113,3 +113,12 @@ export const getDateRangeFromType = (type: string) => {
             return { from: undefined, to: undefined };
     }
 };
+
+export const toTitleCase = (str: string) => {
+    if (!str) return '';
+    return str
+        .toLowerCase()
+        .split(/\s+/)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+};
