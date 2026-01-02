@@ -1,6 +1,6 @@
 'use client';
 
-import { Expense, FilterState } from '@/lib/types/expense';
+import { CategoryMapping, Expense, FilterState } from '@/lib/types/expense';
 import {
     Table,
     TableBody,
@@ -13,9 +13,10 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, X, Edit } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import { EditTransactionModal } from './EditTransactionModal';
 
 interface TransactionTableProps {
     expenses: Expense[];
@@ -24,6 +25,8 @@ interface TransactionTableProps {
     filters?: FilterState;
     categories?: string[];
     subcategories?: string[];
+    categoryMapping: CategoryMapping;
+    onRefresh?: () => void;
 }
 
 type SortConfig = {
@@ -37,10 +40,13 @@ export function TransactionTable({
     onToggleSubcategory,
     filters,
     categories,
-    subcategories
+    subcategories,
+    categoryMapping,
+    onRefresh
 }: TransactionTableProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'parsedDate', direction: 'desc' });
+    const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
     const itemsPerPage = 10;
 
     // Use global filters if available, otherwise fallback to empty (though they should be provided)
@@ -152,21 +158,29 @@ export function TransactionTable({
                                         </Button>
                                     )}
                                 </div>
-                                {subcategories.map(sub => (
-                                    <div key={sub} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
-                                        <Checkbox
-                                            id={`table-sub-${sub}`}
-                                            checked={activeSubcategories.includes(sub)}
-                                            onCheckedChange={() => {
-                                                onToggleSubcategory?.(sub);
-                                                setCurrentPage(1);
-                                            }}
-                                        />
-                                        <label htmlFor={`table-sub-${sub}`} className="text-sm font-normal cursor-pointer flex-1">
-                                            {sub}
-                                        </label>
-                                    </div>
-                                ))}
+                                {(() => {
+                                    const availableSubs = filters?.categories && filters.categories.length > 0
+                                        ? Array.from(new Set(filters.categories.flatMap(cat => categoryMapping[cat] || [])))
+                                            .filter(s => subcategories.includes(s))
+                                            .sort()
+                                        : subcategories;
+
+                                    return availableSubs.map(sub => (
+                                        <div key={sub} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
+                                            <Checkbox
+                                                id={`table-sub-${sub}`}
+                                                checked={activeSubcategories.includes(sub)}
+                                                onCheckedChange={() => {
+                                                    onToggleSubcategory?.(sub);
+                                                    setCurrentPage(1);
+                                                }}
+                                            />
+                                            <label htmlFor={`table-sub-${sub}`} className="text-sm font-normal cursor-pointer flex-1">
+                                                {sub}
+                                            </label>
+                                        </div>
+                                    ));
+                                })()}
                             </div>
                         </PopoverContent>
                     </Popover>
@@ -231,6 +245,7 @@ export function TransactionTable({
                                     Amount {getSortIcon('absAmount')}
                                 </div>
                             </TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -257,11 +272,21 @@ export function TransactionTable({
                                     {expense.amount > 0 ? '+' : ''}
                                     {expense.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
                                 </TableCell>
+                                <TableCell className="text-right">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-slate-400 hover:text-blue-600"
+                                        onClick={() => setEditingExpense(expense)}
+                                    >
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                </TableCell>
                             </TableRow>
                         ))}
                         {paginatedExpenses.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">
+                                <TableCell colSpan={6} className="h-24 text-center">
                                     No transactions found.
                                 </TableCell>
                             </TableRow>
@@ -296,6 +321,16 @@ export function TransactionTable({
                     </Button>
                 </div>
             </div>
+
+            <EditTransactionModal
+                expense={editingExpense}
+                isOpen={!!editingExpense}
+                onClose={() => setEditingExpense(null)}
+                onSuccess={() => onRefresh?.()}
+                categories={categories || []}
+                subcategories={subcategories || []}
+                categoryMapping={categoryMapping}
+            />
         </div>
     );
 }

@@ -1,0 +1,22 @@
+Adjustments/Missing
+Anandi/Books,Clothes,Diaper,Education,Food,Hospital after born,Hospital before born,Medicine,Medicine 2024,Medicine 2025,Misc,Toys,Travel
+Bhakti/Arts,Books,Clothes,Food,Garden,Major things,Makeup fad,Medical,Others,Pani Puri,Sasural,Travel to sasural
+Clothes/Bhakti dress,Bhakti i,Clothes,Deo,Swapnil,Underwear Swapnil
+Food/Bhakti,Chicken,Food,Order
+Health/Gym,Hair treatment,Health,Medical
+Hobby/Bicycle Maintenance,Camera rental
+Home care/Home care
+Household/Baiee,Cable tv,Corona,Entertainment,Garden,Gas,Groceries,Home Maintenance,Household Tools,Internet,Lightbill,Maintenance,Medical,Milk,Mobile,Netflix,Others,Phone,Repairs,RO,Telephone
+Income/Salary,Sodexo
+Income tax/Income tax
+Insurance/Health insurance,Lic,Term insurance
+Investment/Bhakti  investment,Bitcoin,Fees,Gold ETF,Mutual fund SIP,Nps,Silver ETF,Smallcase,Stocks
+Liability/EMI,Home,PropertyTax
+Major things/Camera,Cloud storage,Computer,Home applicances,Major things,Personal,Service
+Misc/Bank faltugiri,Charity,Daan,Gifts,Misc,Other,Party,Social adds
+Personal care/Hair cutting,Personal care,Shampoo
+Rent/Maintenance,Mortgage,Rent
+Study/Books,Dyanske it kafka,Education,Others
+Travel/Auto,Bus,Cab,Car rental,Flight,Rikshaw,S ride,Taxi,Train,Trip,Uber
+Vehicle/Buy,Fuel smartx,Fuel Tvs,Insurance,Service
+Wife/Bhakti,Wife

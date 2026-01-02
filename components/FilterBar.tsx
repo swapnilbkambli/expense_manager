@@ -1,4 +1,4 @@
-import { FilterState, TimeRange } from '@/lib/types/expense';
+import { CategoryMapping, FilterState, TimeRange } from '@/lib/types/expense';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,16 +10,17 @@ import { cn } from '@/lib/utils';
 import { getDateRangeFromType } from '@/lib/data-utils';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 interface FilterBarProps {
     filters: FilterState;
     setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
     categories: string[];
     subcategories: string[];
+    categoryMapping: CategoryMapping;
 }
 
-export function FilterBar({ filters, setFilters, categories, subcategories }: FilterBarProps) {
+export function FilterBar({ filters, setFilters, categories, subcategories, categoryMapping }: FilterBarProps) {
     const [fromInput, setFromInput] = useState(filters.dateRange.from ? format(filters.dateRange.from, 'dd/MM/yyyy') : '');
     const [toInput, setToInput] = useState(filters.dateRange.to ? format(filters.dateRange.to, 'dd/MM/yyyy') : '');
 
@@ -27,6 +28,22 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
         setFromInput(filters.dateRange.from ? format(filters.dateRange.from, 'dd/MM/yyyy') : '');
         setToInput(filters.dateRange.to ? format(filters.dateRange.to, 'dd/MM/yyyy') : '');
     }, [filters.dateRange]);
+
+    const availableSubcategories = useMemo(() => {
+        if (filters.categories.length === 0) return subcategories;
+
+        const subs = new Set<string>();
+        filters.categories.forEach(cat => {
+            const mapped = categoryMapping[cat] || [];
+            mapped.forEach(s => subs.add(s));
+        });
+
+        // Intersect with subcategories that actually exist in the data if possible,
+        // or just use the mapping. The user said "populate only corresponding subcategories".
+        // Let's stick to the mapping but filter by what exists in 'subcategories' (from DB)
+        // so we don't show empty subcategories that have no transactions.
+        return Array.from(subs).filter(s => subcategories.includes(s)).sort();
+    }, [filters.categories, subcategories, categoryMapping]);
 
     // No longer need selectTarget as we have separate controls
 
@@ -120,7 +137,7 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
     const handleSelectAllSubcategories = (select: boolean) => {
         setFilters((prev: FilterState) => ({
             ...prev,
-            subcategories: select ? [...subcategories] : []
+            subcategories: select ? [...availableSubcategories] : []
         }));
     };
 
@@ -346,7 +363,7 @@ export function FilterBar({ filters, setFilters, categories, subcategories }: Fi
                                 </div>
                             </div>
                             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                                {subcategories.map((sub) => (
+                                {availableSubcategories.map((sub) => (
                                     <div key={sub} className="flex items-center space-x-2">
                                         <Checkbox
                                             id={`sub-${sub}`}

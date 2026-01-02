@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Expense, FilterState } from '@/lib/types/expense';
+import { CategoryMapping, Expense, FilterState } from '@/lib/types/expense';
 import {
     Table,
     TableBody,
@@ -39,6 +39,7 @@ interface RollupTableProps {
     onToggleSubcategory?: (subcategory: string) => void;
     categories?: string[];
     subcategories?: string[];
+    categoryMapping: CategoryMapping;
 }
 
 export function RollupTable({
@@ -47,7 +48,8 @@ export function RollupTable({
     onToggleCategory,
     onToggleSubcategory,
     categories,
-    subcategories
+    subcategories,
+    categoryMapping
 }: RollupTableProps) {
     const expenseOnly = useMemo(() => expenses.filter(e => e.amount < 0), [expenses]);
 
@@ -237,18 +239,26 @@ export function RollupTable({
                                         </Button>
                                     )}
                                 </div>
-                                {subcategories.map(sub => (
-                                    <div key={sub} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
-                                        <Checkbox
-                                            id={`rollup-sub-${sub}`}
-                                            checked={activeSubcategories.includes(sub)}
-                                            onCheckedChange={() => onToggleSubcategory?.(sub)}
-                                        />
-                                        <label htmlFor={`rollup-sub-${sub}`} className="text-sm font-normal cursor-pointer flex-1">
-                                            {sub}
-                                        </label>
-                                    </div>
-                                ))}
+                                {(() => {
+                                    const availableSubs = filters?.categories && filters.categories.length > 0
+                                        ? Array.from(new Set(filters.categories.flatMap(cat => categoryMapping[cat] || [])))
+                                            .filter(s => subcategories?.includes(s))
+                                            .sort()
+                                        : subcategories || [];
+
+                                    return availableSubs.map(sub => (
+                                        <div key={sub} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
+                                            <Checkbox
+                                                id={`rollup-sub-${sub}`}
+                                                checked={activeSubcategories.includes(sub)}
+                                                onCheckedChange={() => onToggleSubcategory?.(sub)}
+                                            />
+                                            <label htmlFor={`rollup-sub-${sub}`} className="text-sm font-normal cursor-pointer flex-1">
+                                                {sub}
+                                            </label>
+                                        </div>
+                                    ));
+                                })()}
                             </div>
                         </PopoverContent>
                     </Popover>
@@ -482,6 +492,6 @@ export function RollupTable({
                     </div>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 }

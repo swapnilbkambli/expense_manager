@@ -1,4 +1,5 @@
 export interface Expense {
+    id?: number;
     date: string; // Original string DD-MM-YYYY
     parsedDate: Date;
     amount: number;
@@ -36,4 +37,8 @@ export interface DashboardMetrics {
     totalIncome: number;
     totalExpenses: number;
     netSavings: number;
+}
+
+export interface CategoryMapping {
+    [category: string]: string[];
 }

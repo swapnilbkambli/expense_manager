@@ -1,0 +1,147 @@
+import Database from 'better-sqlite3';
+import path from 'path';
+import { Expense, FilterState } from './types/expense';
+
+const DB_PATH = path.join(process.cwd(), 'expenses.db');
+
+let db: Database.Database | null = null;
+
+export function getDb() {
+    if (!db) {
+        db = new Database(DB_PATH);
+        initDb();
+    }
+    return db;
+}
+
+function initDb() {
+    const database = getDb();
+    database.exec(`
+        CREATE TABLE IF NOT EXISTS expenses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT,
+            parsedDate INTEGER,
+            amount REAL,
+            category TEXT,
+            subcategory TEXT,
+            paymentMethod TEXT,
+            description TEXT,
+            refCheckNo TEXT,
+            payeePayer TEXT,
+            status TEXT,
+            receiptPicture TEXT,
+            account TEXT,
+            tag TEXT,
+            tax TEXT,
+            quantity TEXT,
+            splitTotal TEXT,
+            rowId TEXT,
+            typeId TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_category ON expenses(category);
+        CREATE INDEX IF NOT EXISTS idx_subcategory ON expenses(subcategory);
+        CREATE INDEX IF NOT EXISTS idx_parsedDate ON expenses(parsedDate);
+    `);
+}
+
+export function clearExpenses() {
+    const database = getDb();
+    database.prepare('DELETE FROM expenses').run();
+}
+
+export function bulkInsertExpenses(expenses: Expense[]) {
+    const database = getDb();
+    const insert = database.prepare(`
+        INSERT INTO expenses (
+            date, parsedDate, amount, category, subcategory, paymentMethod, 
+            description, refCheckNo, payeePayer, status, receiptPicture, 
+            account, tag, tax, quantity, splitTotal, rowId, typeId
+        ) VALUES (
+            @date, @parsedDate, @amount, @category, @subcategory, @paymentMethod, 
+            @description, @refCheckNo, @payeePayer, @status, @receiptPicture, 
+            @account, @tag, @tax, @quantity, @splitTotal, @rowId, @typeId
+        )
+    `);
+
+    const insertMany = database.transaction((items: Expense[]) => {
+        for (const item of items) {
+            insert.run({
+                ...item,
+                parsedDate: item.parsedDate.getTime()
+            });
+        }
+    });
+
+    insertMany(expenses);
+}
+
+export function queryExpenses(filters?: FilterState): Expense[] {
+    const database = getDb();
+    let query = 'SELECT * FROM expenses WHERE 1=1';
+    const params: any = {};
+
+    if (filters) {
+        if (filters.dateRange.from) {
+            query += ' AND parsedDate >= @from';
+            params.from = filters.dateRange.from.getTime();
+        }
+        if (filters.dateRange.to) {
+            query += ' AND parsedDate <= @to';
+            params.to = filters.dateRange.to.getTime();
+        }
+        if (filters.categories.length > 0) {
+            const placeholders = filters.categories.map((_, i) => `@cat${i}`).join(',');
+            query += ` AND category IN (${placeholders})`;
+            filters.categories.forEach((cat, i) => {
+                params[`cat${i}`] = cat;
+            });
+        }
+        if (filters.subcategories.length > 0) {
+            const placeholders = filters.subcategories.map((_, i) => `@sub${i}`).join(',');
+            query += ` AND subcategory IN (${placeholders})`;
+            filters.subcategories.forEach((sub, i) => {
+                params[`sub${i}`] = sub;
+            });
+        }
+        if (filters.searchQuery) {
+            query += ' AND (description LIKE @search OR payeePayer LIKE @search)';
+            params.search = `%${filters.searchQuery}%`;
+        }
+    }
+
+    query += ' ORDER BY parsedDate DESC';
+
+    const rows = database.prepare(query).all(params) as any[];
+
+    return rows.map(row => ({
+        ...row,
+        parsedDate: new Date(row.parsedDate)
+    }));
+}
+export function updateExpense(id: number, updates: Partial<Expense>) {
+    const database = getDb();
+    const fields = Object.keys(updates);
+    if (fields.length === 0) return;
+
+    const setClause = fields.map(field => `${field} = @${field}`).join(', ');
+    const query = `UPDATE expenses SET ${setClause} WHERE id = @id`;
+
+    const preparedParams = { ...updates, id };
+
+    // special handling for parsedDate if it's being updated
+    if (updates.parsedDate) {
+        (preparedParams as any).parsedDate = updates.parsedDate.getTime();
+    }
+
+    database.prepare(query).run(preparedParams);
+}
+
+export function getAllExpensesForExport(): Expense[] {
+    const database = getDb();
+    const rows = database.prepare('SELECT * FROM expenses ORDER BY parsedDate ASC').all() as any[];
+    return rows.map(row => ({
+        ...row,
+        parsedDate: new Date(row.parsedDate)
+    }));
+}
