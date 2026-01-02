@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 
 interface TrendChartProps {
     expenses: Expense[];
+    viewMode?: 'expense' | 'income';
 }
 
 export function TrendChart({ expenses }: TrendChartProps) {

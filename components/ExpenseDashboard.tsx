@@ -14,6 +14,7 @@ import { AveragesTable } from './AveragesTable';
 import { RollupTable } from './RollupTable';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { getDefaultCSVData, importExpensesAction, fetchExpensesAction, getFilterDataAction, exportToCSVAction, backupDefaultCSVAction, getCategoryMappingAction } from '@/lib/actions';
 import { Upload, Plus, Loader2, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +27,7 @@ export default function ExpenseDashboard() {
     const [subcategories, setSubcategories] = useState<string[]>([]);
     const [categoryMapping, setCategoryMapping] = useState<CategoryMapping>({});
     const [isLoading, setIsLoading] = useState(true);
+    const [transactionView, setTransactionView] = useState<'list' | 'rollup'>('list');
     const [isImporting, setIsImporting] = useState(false);
 
     const [filters, setFilters] = useState<FilterState>({
@@ -34,6 +36,7 @@ export default function ExpenseDashboard() {
         categories: [],
         subcategories: [],
         searchQuery: '',
+        viewMode: 'expense',
     });
     const loadData = async (shouldImportDefault = false) => {
         setIsLoading(true);
@@ -52,7 +55,17 @@ export default function ExpenseDashboard() {
             setFilteredExpenses(data);
             setCategories(filterMetaData.categories);
             setSubcategories(filterMetaData.subcategories);
-            setCategoryMapping(mapping);
+
+            // Merge file mapping with actual DB mapping for maximum coverage
+            const combinedMapping = { ...mapping };
+            if (filterMetaData.dbMapping) {
+                Object.entries(filterMetaData.dbMapping).forEach(([cat, subs]) => {
+                    const existing = combinedMapping[cat] || [];
+                    const merged = Array.from(new Set([...existing, ...(subs as string[])]));
+                    combinedMapping[cat] = merged;
+                });
+            }
+            setCategoryMapping(combinedMapping);
 
             // For AveragesTable (filtered by search/date only)
             const baseData = await fetchExpensesAction({
@@ -245,102 +258,114 @@ export default function ExpenseDashboard() {
 
             <MetricCards metrics={metrics} />
 
-            <SpendingInsights expenses={filteredExpenses} />
+            <SpendingInsights expenses={filteredExpenses} viewMode={filters.viewMode} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-medium">Spending Trends</CardTitle>
+                <Card className="lg:col-span-2 rounded-2xl border-none shadow-sm overflow-hidden">
+                    <CardHeader className="bg-white border-b border-slate-50 pb-4">
+                        <CardTitle className="text-lg font-bold text-slate-800">
+                            {filters.viewMode === 'expense' ? 'Spending Trends' : 'Income Trends'}
+                        </CardTitle>
                     </CardHeader>
                     <CardContent className="h-[350px]">
-                        <TrendChart expenses={filteredExpenses} />
+                        <TrendChart expenses={filteredExpenses} viewMode={filters.viewMode} />
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg font-medium">Category Breakdown</CardTitle>
+                <Card className="lg:col-span-1 ring-1 ring-slate-200 shadow-sm overflow-hidden rounded-2xl">
+                    <CardHeader className="bg-white border-b border-slate-50 pb-4 text-center">
+                        <CardTitle className="text-lg font-bold text-slate-800">
+                            {filters.viewMode === 'expense' ? 'Expense Distribution' : 'Income Distribution'}
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="h-[350px]">
-                        <CategoryDonut expenses={filteredExpenses} onToggleCategory={toggleCategory} />
+                    <CardContent className="pt-6 h-[350px]">
+                        <CategoryDonut expenses={filteredExpenses} onToggleCategory={toggleCategory} viewMode={filters.viewMode} />
                     </CardContent>
                 </Card>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg font-medium">Monthly Averages</CardTitle>
+                <Card className="rounded-2xl border-none shadow-sm overflow-hidden">
+                    <CardHeader className="bg-white border-b border-slate-50 pb-4">
+                        <CardTitle className="text-lg font-bold text-slate-800">
+                            {filters.viewMode === 'expense' ? 'Top Expense Subcategories' : 'Top Income Subcategories'}
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <AveragesTable
-                            expenses={baseFilteredExpenses}
-                            filters={filters}
-                            onToggleCategory={toggleCategory}
-                            onToggleSubcategory={toggleSubcategory}
-                            onSelectCategories={handleSelectCategories}
-                        />
+                    <CardContent className="pt-6 h-[400px]">
+                        <SubcategoryBar expenses={filteredExpenses} onToggleSubcategory={toggleSubcategory} viewMode={filters.viewMode} />
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg font-medium">Top Subcategories</CardTitle>
+                <Card className="rounded-2xl border-none shadow-sm overflow-hidden">
+                    <CardHeader className="bg-white border-b border-slate-50 pb-4">
+                        <CardTitle className="text-lg font-bold text-slate-800">
+                            {filters.viewMode === 'expense' ? 'Monthly Expense Averages' : 'Monthly Income Averages'}
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="h-[400px]">
-                        <SubcategoryBar expenses={filteredExpenses} onToggleSubcategory={toggleSubcategory} />
+                    <CardContent className="p-0">
+                        <AveragesTable
+                            expenses={baseFilteredExpenses}
+                            onToggleCategory={toggleCategory}
+                            onToggleSubcategory={toggleSubcategory}
+                            onSelectCategories={handleSelectCategories}
+                            filters={filters}
+                        />
                     </CardContent>
                 </Card>
             </div>
 
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-lg font-medium">Transactions</CardTitle>
+            <Card className="rounded-2xl border-none shadow-sm overflow-hidden">
+                <CardHeader className="bg-white border-b border-slate-50 pb-2 flex flex-row items-center justify-between">
+                    <CardTitle className="text-lg font-bold text-slate-800">
+                        Detailed {filters.viewMode === 'expense' ? 'Expenses' : 'Income'}
+                    </CardTitle>
                     <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
                         <button
-                            onClick={() => setViewMode('list')}
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'list'
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
-                                }`}
+                            onClick={() => setTransactionView('list')}
+                            className={cn(
+                                "px-3 py-1.5 text-xs font-semibold rounded-md transition-all",
+                                transactionView === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                            )}
                         >
                             Detailed List
                         </button>
                         <button
-                            onClick={() => setViewMode('rollup')}
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'rollup'
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
-                                }`}
+                            onClick={() => setTransactionView('rollup')}
+                            className={cn(
+                                "px-3 py-1.5 text-xs font-semibold rounded-md transition-all",
+                                transactionView === 'rollup' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                            )}
                         >
                             Roll-up View
                         </button>
                     </div>
                 </CardHeader>
-                <CardContent>
-                    {viewMode === 'list' ? (
-                        <TransactionTable
-                            expenses={filteredExpenses}
-                            onToggleCategory={toggleCategory}
-                            onToggleSubcategory={toggleSubcategory}
-                            filters={filters}
-                            categories={categories}
-                            subcategories={subcategories}
-                            categoryMapping={categoryMapping}
-                            onRefresh={refreshData}
-                        />
-                    ) : (
-                        <RollupTable
-                            expenses={filteredExpenses}
-                            filters={filters}
-                            onToggleCategory={toggleCategory}
-                            onToggleSubcategory={toggleSubcategory}
-                            categories={categories}
-                            subcategories={subcategories}
-                            categoryMapping={categoryMapping}
-                            onRefresh={refreshData}
-                        />
-                    )}
+                <CardContent className="p-0">
+                    <div className="p-4">
+                        {transactionView === 'list' ? (
+                            <TransactionTable
+                                expenses={filteredExpenses}
+                                onToggleCategory={toggleCategory}
+                                onToggleSubcategory={toggleSubcategory}
+                                filters={filters}
+                                categories={categories}
+                                subcategories={subcategories}
+                                categoryMapping={categoryMapping}
+                                onRefresh={refreshData}
+                            />
+                        ) : (
+                            <RollupTable
+                                expenses={filteredExpenses}
+                                filters={filters}
+                                onToggleCategory={toggleCategory}
+                                onToggleSubcategory={toggleSubcategory}
+                                categories={categories}
+                                subcategories={subcategories}
+                                categoryMapping={categoryMapping}
+                                onRefresh={refreshData}
+                            />
+                        )}
+                    </div>
                 </CardContent>
             </Card>
         </div >

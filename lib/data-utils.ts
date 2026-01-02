@@ -93,20 +93,22 @@ export const getTrendData = (expenses: Expense[]) => {
     return Object.values(monthlyData);
 };
 
-export const getCategoryData = (expenses: Expense[]) => {
+export const getCategoryData = (expenses: Expense[], viewMode: 'expense' | 'income' = 'expense') => {
     const categoryMap: { [key: string]: number } = {};
+    const filtered = expenses.filter(e => viewMode === 'expense' ? e.amount < 0 : e.amount > 0);
 
-    expenses.filter(e => e.amount < 0).forEach((expense) => {
+    filtered.forEach((expense) => {
         categoryMap[expense.category] = (categoryMap[expense.category] || 0) + Math.abs(expense.amount);
     });
 
     return Object.entries(categoryMap).map(([name, value]) => ({ name, value }));
 };
 
-export const getSubcategoryData = (expenses: Expense[]) => {
+export const getSubcategoryData = (expenses: Expense[], viewMode: 'expense' | 'income' = 'expense') => {
     const subcategoryMap: { [key: string]: number } = {};
+    const filtered = expenses.filter(e => viewMode === 'expense' ? e.amount < 0 : e.amount > 0);
 
-    expenses.filter(e => e.amount < 0).forEach((expense) => {
+    filtered.forEach((expense) => {
         const key = expense.subcategory || 'Other';
         subcategoryMap[key] = (subcategoryMap[key] || 0) + Math.abs(expense.amount);
     });
@@ -142,9 +144,10 @@ export const getDateRangeFromType = (type: string) => {
 
 export const toTitleCase = (str: string) => {
     if (!str) return '';
-    return str
+    return str.trim()
         .toLowerCase()
         .split(/\s+/)
+        .filter(Boolean)
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 };

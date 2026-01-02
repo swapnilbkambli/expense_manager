@@ -28,6 +28,7 @@ interface AveragesTableProps {
 export function AveragesTable({ expenses, onToggleCategory, onToggleSubcategory, onSelectCategories, filters }: AveragesTableProps) {
     const [localSearch, setLocalSearch] = useState('');
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+    const viewMode = filters.viewMode;
 
     const toggleExpand = (category: string) => {
         const newSet = new Set(expandedCategories);
@@ -40,11 +41,12 @@ export function AveragesTable({ expenses, onToggleCategory, onToggleSubcategory,
     };
 
     const hierarchicalData = useMemo(() => {
-        const expenseRecords = expenses.filter((e) => e.amount < 0);
-        if (expenseRecords.length === 0) return [];
+        const isExpense = viewMode === 'expense';
+        const dataRecords = expenses.filter((e) => isExpense ? e.amount < 0 : e.amount > 0);
+        if (dataRecords.length === 0) return [];
 
         // Sort to get date range
-        const sorted = [...expenseRecords].sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime());
+        const sorted = [...dataRecords].sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime());
         const startDate = sorted[0].parsedDate;
         const endDate = sorted[sorted.length - 1].parsedDate;
         const monthsRange = Math.max(1, differenceInMonths(endOfMonth(endDate), startOfMonth(startDate)) + 1);
@@ -57,7 +59,7 @@ export function AveragesTable({ expenses, onToggleCategory, onToggleSubcategory,
             }
         } = {};
 
-        expenseRecords.forEach((e) => {
+        dataRecords.forEach((e) => {
             if (!categoryMap[e.category]) {
                 categoryMap[e.category] = { total: 0, count: 0, subcategories: {} };
             }
@@ -199,8 +201,14 @@ export function AveragesTable({ expenses, onToggleCategory, onToggleSubcategory,
                                                 </span>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-right font-bold text-blue-700">{formatCurrency(categoryRow.avg)}</TableCell>
-                                        <TableCell className="text-right text-slate-600 font-medium">{formatCurrency(categoryRow.total)}</TableCell>
+                                        <TableCell className="text-right font-bold text-blue-700">
+                                            <span className={cn(viewMode === 'income' && "text-emerald-600")}>
+                                                {formatCurrency(categoryRow.avg)}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right text-slate-600 font-medium">
+                                            {formatCurrency(categoryRow.total)}
+                                        </TableCell>
                                         <TableCell className="text-right text-slate-400 text-xs">{categoryRow.count}</TableCell>
                                     </TableRow>
 
@@ -231,7 +239,11 @@ export function AveragesTable({ expenses, onToggleCategory, onToggleSubcategory,
                                                         {sub.subcategory}
                                                     </span>
                                                 </TableCell>
-                                                <TableCell className="text-right text-blue-500 font-semibold">{formatCurrency(sub.avg)}</TableCell>
+                                                <TableCell className="text-right text-blue-500 font-semibold">
+                                                    <span className={cn(viewMode === 'income' && "text-emerald-500")}>
+                                                        {formatCurrency(sub.avg)}
+                                                    </span>
+                                                </TableCell>
                                                 <TableCell className="text-right text-slate-500 text-sm">{formatCurrency(sub.total)}</TableCell>
                                                 <TableCell className="text-right text-slate-300 text-[10px]">{sub.count}</TableCell>
                                             </TableRow>

@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { EditTransactionModal } from './EditTransactionModal';
+import { cn } from '@/lib/utils';
 
 interface RollupTableProps {
     expenses: Expense[];
@@ -54,20 +55,21 @@ export function RollupTable({
     categoryMapping,
     onRefresh
 }: RollupTableProps) {
-    const expenseOnly = useMemo(() => expenses.filter(e => e.amount < 0), [expenses]);
+    const viewMode = filters.viewMode;
+    const dataRecords = useMemo(() => expenses.filter(e => viewMode === 'expense' ? e.amount < 0 : e.amount > 0), [expenses, viewMode]);
 
     // Use global filters if available
     const activeCategories = filters?.categories || [];
     const activeSubcategories = filters?.subcategories || [];
     // Auto-detect view mode based on date range if not manually set
     const dateRange = useMemo(() => {
-        if (expenseOnly.length === 0) return null;
-        const dates = expenseOnly.map(e => e.parsedDate.getTime());
+        if (dataRecords.length === 0) return null;
+        const dates = dataRecords.map(e => e.parsedDate.getTime());
         return {
             min: new Date(Math.min(...dates)),
             max: new Date(Math.max(...dates))
         };
-    }, [expenseOnly]);
+    }, [dataRecords]);
 
     const defaultMode = useMemo(() => {
         if (!dateRange) return 'monthly';
@@ -154,7 +156,7 @@ export function RollupTable({
             mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy')
         );
 
-        expenseOnly.forEach(e => {
+        dataRecords.forEach(e => {
             const cat = e.category || 'Uncategorized';
             const sub = e.subcategory || 'Other';
             const periodKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
@@ -187,7 +189,7 @@ export function RollupTable({
         });
 
         return { categories: sortedCategories, catMap };
-    }, [expenseOnly, periods, mode]);
+    }, [dataRecords, periods, mode]);
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('en-IN', {
@@ -197,10 +199,10 @@ export function RollupTable({
         }).format(val);
     };
 
-    if (expenseOnly.length === 0) {
+    if (dataRecords.length === 0) {
         return (
             <div className="h-40 flex items-center justify-center text-muted-foreground italic">
-                No expense data available for the selected period.
+                No data available for the selected period ({viewMode}).
             </div>
         );
     }
@@ -308,6 +310,7 @@ export function RollupTable({
                         <X className="ml-2 h-4 w-4" />
                     </Button>
                 )}
+
             </div>
 
             <div className="flex items-center justify-between">
@@ -386,7 +389,7 @@ export function RollupTable({
                                             const val = catData.periodTotals[key] || 0;
                                             catTotal += val;
 
-                                            const periodExpenses = expenseOnly.filter(e => {
+                                            const periodExpenses = dataRecords.filter(e => {
                                                 const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
                                                 return e.category === cat && pKey === key;
                                             });
@@ -432,7 +435,7 @@ export function RollupTable({
                                                     const val = subData[key] || 0;
                                                     subTotal += val;
 
-                                                    const periodExpenses = expenseOnly.filter(e => {
+                                                    const periodExpenses = dataRecords.filter(e => {
                                                         const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
                                                         return e.category === cat && (e.subcategory || 'Other') === sub && pKey === key;
                                                     });

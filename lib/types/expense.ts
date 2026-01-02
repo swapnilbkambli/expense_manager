@@ -31,6 +31,7 @@ export interface FilterState {
     categories: string[];
     subcategories: string[];
     searchQuery: string;
+    viewMode: 'expense' | 'income';
 }
 
 export interface DashboardMetrics {

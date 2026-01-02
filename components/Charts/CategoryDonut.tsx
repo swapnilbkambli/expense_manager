@@ -8,12 +8,13 @@ import { useMemo } from 'react';
 interface CategoryDonutProps {
     expenses: Expense[];
     onToggleCategory?: (category: string) => void;
+    viewMode?: 'expense' | 'income';
 }
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
 
-export function CategoryDonut({ expenses, onToggleCategory }: CategoryDonutProps) {
-    const data = useMemo(() => getCategoryData(expenses), [expenses]);
+export function CategoryDonut({ expenses, onToggleCategory, viewMode = 'expense' }: CategoryDonutProps) {
+    const data = useMemo(() => getCategoryData(expenses, viewMode), [expenses, viewMode]);
 
     return (
         <ResponsiveContainer width="100%" height="100%">

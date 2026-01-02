@@ -8,12 +8,13 @@ import { useMemo } from 'react';
 interface SubcategoryBarProps {
     expenses: Expense[];
     onToggleSubcategory?: (subcategory: string) => void;
+    viewMode?: 'expense' | 'income';
 }
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
 
-export function SubcategoryBar({ expenses, onToggleSubcategory }: SubcategoryBarProps) {
-    const data = useMemo(() => getSubcategoryData(expenses), [expenses]);
+export function SubcategoryBar({ expenses, onToggleSubcategory, viewMode = 'expense' }: SubcategoryBarProps) {
+    const data = useMemo(() => getSubcategoryData(expenses, viewMode), [expenses, viewMode]);
 
     return (
         <ResponsiveContainer width="100%" height="100%">

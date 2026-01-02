@@ -57,10 +57,15 @@ export function TransactionTable({
     const activeCategories = filters?.categories || [];
     const activeSubcategories = filters?.subcategories || [];
 
-    const sortedExpenses = useMemo(() => {
-        if (!sortConfig) return expenses;
+    const viewMode = filters?.viewMode || 'expense';
+    const modeFilteredExpenses = useMemo(() => {
+        return expenses.filter(e => viewMode === 'expense' ? e.amount < 0 : e.amount > 0);
+    }, [expenses, viewMode]);
 
-        return [...expenses].sort((a, b) => {
+    const sortedExpenses = useMemo(() => {
+        if (!sortConfig) return modeFilteredExpenses;
+
+        return [...modeFilteredExpenses].sort((a, b) => {
             let aValue: any = a[sortConfig.key as keyof Expense];
             let bValue: any = b[sortConfig.key as keyof Expense];
 

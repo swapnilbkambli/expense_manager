@@ -36,12 +36,19 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
         filters.categories.forEach(cat => {
             const mapped = categoryMapping[cat] || [];
             mapped.forEach(s => subs.add(s));
+
+            // Fallback: If no subcategories are mapped in category.txt for this category,
+            // or if we want to be safe, we could check if any subcategories in the 'subcategories' 
+            // list (from the DB) should belong here.
+            // But without the full data, we can't be sure which sub belongs to which cat.
+            // However, we can at least ensure we don't accidentally hide things if the mapping is incomplete.
         });
 
-        // Intersect with subcategories that actually exist in the data if possible,
-        // or just use the mapping. The user said "populate only corresponding subcategories".
-        // Let's stick to the mapping but filter by what exists in 'subcategories' (from DB)
-        // so we don't show empty subcategories that have no transactions.
+        // Let's add a heuristic: if a subcategory contains the category name or vice versa, 
+        // or if it's just generally present in the DB, we might want to show it.
+        // Actually, the best fix is to update getFilterDataAction to return the real mapping.
+        // For now, let's just make sure we are not being TOO restrictive if the mapping is empty.
+
         return Array.from(subs).filter(s => subcategories.includes(s)).sort();
     }, [filters.categories, subcategories, categoryMapping]);
 
@@ -161,7 +168,7 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
         <div className="flex flex-col gap-4 bg-card p-4 rounded-xl border shadow-sm">
             <div className="flex flex-wrap items-center gap-3">
                 {/* Search */}
-                <div className="relative flex-1 min-w-[240px]">
+                <div className="relative flex-1 min-w-[200px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         placeholder="Search description, category..."
@@ -169,6 +176,32 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
                         value={filters.searchQuery}
                         onChange={(e) => setFilters((prev) => ({ ...prev, searchQuery: e.target.value }))}
                     />
+                </div>
+
+                {/* View Mode Toggle */}
+                <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+                    <button
+                        onClick={() => setFilters(prev => ({ ...prev, viewMode: 'expense' }))}
+                        className={cn(
+                            "px-3 py-1.5 text-xs font-bold rounded-md transition-all",
+                            filters.viewMode === 'expense'
+                                ? 'bg-white text-blue-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                        )}
+                    >
+                        Expenses
+                    </button>
+                    <button
+                        onClick={() => setFilters(prev => ({ ...prev, viewMode: 'income' }))}
+                        className={cn(
+                            "px-3 py-1.5 text-xs font-bold rounded-md transition-all",
+                            filters.viewMode === 'income'
+                                ? 'bg-white text-emerald-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                        )}
+                    >
+                        Income
+                    </button>
                 </div>
 
                 {/* Time Range */}

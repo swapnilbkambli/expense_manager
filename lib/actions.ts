@@ -46,7 +46,18 @@ export async function getFilterDataAction() {
         const db = (await import('./db')).getDb();
         const categories = db.prepare("SELECT DISTINCT category FROM expenses WHERE category IS NOT NULL AND category != '' ORDER BY category ASC").all().map((r: any) => r.category);
         const subcategories = db.prepare("SELECT DISTINCT subcategory FROM expenses WHERE subcategory IS NOT NULL AND subcategory != '' ORDER BY subcategory ASC").all().map((r: any) => r.subcategory);
-        return { categories, subcategories };
+
+        // Build actual mapping from DB
+        const rawMapping = db.prepare("SELECT DISTINCT category, subcategory FROM expenses WHERE category IS NOT NULL AND category != ''").all() as { category: string, subcategory: string }[];
+        const dbMapping: CategoryMapping = {};
+        rawMapping.forEach(r => {
+            if (!dbMapping[r.category]) dbMapping[r.category] = [];
+            if (r.subcategory && !dbMapping[r.category].includes(r.subcategory)) {
+                dbMapping[r.category].push(r.subcategory);
+            }
+        });
+
+        return { categories, subcategories, dbMapping };
     } catch (error) {
         console.error('Error fetching filter data:', error);
         throw new Error('Failed to fetch filter data');
