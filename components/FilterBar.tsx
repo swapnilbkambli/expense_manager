@@ -181,6 +181,11 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
                         <SelectItem value="All Time">All Time</SelectItem>
                         <SelectItem value="YTD">YTD</SelectItem>
                         <SelectItem value="Last 30 Days">Last 30 Days</SelectItem>
+                        <SelectItem value="Last 1 Year">Last 1 Year</SelectItem>
+                        <SelectItem value="Last 2 Years">Last 2 Years</SelectItem>
+                        <SelectItem value="Last 3 Years">Last 3 Years</SelectItem>
+                        <SelectItem value="Last 4 Years">Last 4 Years</SelectItem>
+                        <SelectItem value="Last 5 Years">Last 5 Years</SelectItem>
                         <SelectItem value="Custom">Custom</SelectItem>
                     </SelectContent>
                 </Select>

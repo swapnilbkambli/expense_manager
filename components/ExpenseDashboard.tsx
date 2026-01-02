@@ -173,6 +173,15 @@ export default function ExpenseDashboard() {
         }));
     };
 
+    const handleSelectCategories = (cats: string[], select: boolean) => {
+        setFilters((prev) => {
+            const newCategories = select
+                ? Array.from(new Set([...prev.categories, ...cats]))
+                : prev.categories.filter((c) => !cats.includes(c));
+            return { ...prev, categories: newCategories, subcategories: [] };
+        });
+    };
+
     if (isLoading && filteredExpenses.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
@@ -269,6 +278,7 @@ export default function ExpenseDashboard() {
                             filters={filters}
                             onToggleCategory={toggleCategory}
                             onToggleSubcategory={toggleSubcategory}
+                            onSelectCategories={handleSelectCategories}
                         />
                     </CardContent>
                 </Card>

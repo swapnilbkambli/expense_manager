@@ -20,7 +20,7 @@ export interface Expense {
     typeId: string;
 }
 
-export type TimeRange = 'YTD' | 'All Time' | 'Last 30 Days' | 'Custom';
+export type TimeRange = 'YTD' | 'All Time' | 'Last 30 Days' | 'Last 1 Year' | 'Last 2 Years' | 'Last 3 Years' | 'Last 4 Years' | 'Last 5 Years' | 'Custom';
 
 export interface FilterState {
     dateRange: {

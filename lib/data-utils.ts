@@ -1,5 +1,5 @@
 import { Expense, FilterState, DashboardMetrics } from './types/expense';
-import { isWithinInterval, startOfYear, endOfYear, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { isWithinInterval, startOfYear, endOfYear, subDays, startOfMonth, endOfMonth, subYears } from 'date-fns';
 
 export const filterExpenses = (expenses: Expense[], filters: FilterState): Expense[] => {
     return expenses.filter((expense) => {
@@ -108,6 +108,16 @@ export const getDateRangeFromType = (type: string) => {
             return { from: startOfYear(now), to: endOfYear(now) };
         case 'Last 30 Days':
             return { from: subDays(now, 30), to: now };
+        case 'Last 1 Year':
+            return { from: subYears(now, 1), to: now };
+        case 'Last 2 Years':
+            return { from: subYears(now, 2), to: now };
+        case 'Last 3 Years':
+            return { from: subYears(now, 3), to: now };
+        case 'Last 4 Years':
+            return { from: subYears(now, 4), to: now };
+        case 'Last 5 Years':
+            return { from: subYears(now, 5), to: now };
         case 'All Time':
         default:
             return { from: undefined, to: undefined };
