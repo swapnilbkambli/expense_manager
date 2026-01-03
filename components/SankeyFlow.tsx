@@ -152,20 +152,16 @@ export function SankeyFlow({ expenses }: SankeyFlowProps) {
     const chartHeight = Math.max(600, data.nodes.length * 18);
 
     return (
-        <Card className="rounded-2xl border-none shadow-sm overflow-hidden h-full">
-            <CardHeader className="bg-white border-b border-slate-50 pb-4 flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-bold text-slate-800">Fund Flow (Income → Category → Subcategory)</CardTitle>
-                <span className="text-xs text-slate-400 font-medium bg-slate-50 px-2 py-1 rounded">Scroll to see details</span>
-            </CardHeader>
-            <CardContent className="h-[700px] p-0 overflow-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-                <div style={{ minWidth: '900px', height: `${chartHeight}px`, padding: '40px 20px' }}>
+        <div className="w-full bg-slate-50/30">
+            <div className="max-h-[700px] overflow-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                <div style={{ minWidth: '940px', height: `${chartHeight}px`, padding: '40px 60px' }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <Sankey
                             data={data}
-                            node={<CustomNode />}
+                            node={<CustomNode containerWidth={940} />}
                             link={{ stroke: COLORS.link, strokeOpacity: 0.3 }}
-                            margin={{ top: 20, right: 160, bottom: 20, left: 10 }}
-                            nodePadding={12}
+                            margin={{ top: 20, right: 180, bottom: 20, left: 10 }}
+                            nodePadding={14}
                             iterations={64}
                         >
                             <RechartsTooltip
@@ -173,12 +169,17 @@ export function SankeyFlow({ expenses }: SankeyFlowProps) {
                                     value !== undefined ? `${value.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}` : '0',
                                     'Value'
                                 ]}
-                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }}
                             />
                         </Sankey>
                     </ResponsiveContainer>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+            <div className="p-3 border-t border-slate-100 bg-white/50 text-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Interactive Flow • Scroll to explore details
+                </span>
+            </div>
+        </div>
     );
 }

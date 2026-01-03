@@ -4,9 +4,21 @@ import { promises as fs, existsSync } from 'fs';
 import path from 'path';
 import Papa from 'papaparse';
 import { parseExpenseCSV } from './csv-parser';
-import { clearExpenses, bulkInsertExpenses, queryExpenses, updateExpense, getAllExpensesForExport } from './db';
-import { FilterState, Expense, CategoryMapping, SummaryMetrics, PeriodSummary } from './types/expense';
-import { toTitleCase } from './data-utils';
+import {
+    getDb,
+    queryExpenses,
+    clearExpenses,
+    bulkInsertExpenses,
+    updateExpense,
+    getBudgets,
+    setBudget,
+    getAllExpensesForExport,
+    getIgnoredInsights,
+    setIgnoredInsight,
+    clearIgnoredInsights
+} from './db';
+import { FilterState, Expense, CategoryMapping, SummaryMetrics, PeriodSummary, AdvancedInsights, CategoryBudget } from './types/expense';
+import { toTitleCase, getDateRangeFromType, detectRecurringExpenses, detectAnomalies, getSavingsRateTrend } from './data-utils';
 import {
     startOfToday,
     startOfWeek,
@@ -228,5 +240,66 @@ export async function getSummaryMetricsAction(): Promise<SummaryMetrics> {
     } catch (error) {
         console.error('Error in getSummaryMetricsAction:', error);
         throw new Error('Failed to fetch summary metrics');
+    }
+}
+
+export async function getAdvancedInsightsAction(): Promise<AdvancedInsights> {
+    try {
+        const db = (await import('./db')).getDb();
+        const rows = db.prepare('SELECT * FROM expenses').all() as any[];
+        const expenses = rows.map(r => ({ ...r, parsedDate: new Date(r.parsedDate) })) as Expense[];
+
+        const ignored = getIgnoredInsights();
+        const ignoredRecurring = ignored.filter(i => i.type === 'recurring').map(i => i.identifier);
+        const ignoredAnomalies = ignored.filter(i => i.type === 'anomaly').map(i => i.identifier);
+
+        return {
+            recurring: detectRecurringExpenses(expenses, ignoredRecurring),
+            anomalies: detectAnomalies(expenses, ignoredAnomalies),
+            savingsTrend: getSavingsRateTrend(expenses),
+            budgets: getBudgets()
+        };
+    } catch (error) {
+        console.error('Error in getAdvancedInsightsAction:', error);
+        throw new Error('Failed to fetch advanced insights');
+    }
+}
+
+export async function ignoreInsightAction(type: 'recurring' | 'anomaly', identifier: string) {
+    try {
+        setIgnoredInsight(type, identifier);
+        return { success: true };
+    } catch (error) {
+        console.error('Error in ignoreInsightAction:', error);
+        return { success: false, error: 'Failed to ignore insight' };
+    }
+}
+
+export async function clearIgnoredInsightsAction() {
+    try {
+        clearIgnoredInsights();
+        return { success: true };
+    } catch (error) {
+        console.error('Error in clearIgnoredInsightsAction:', error);
+        return { success: false, error: 'Failed to clear ignored insights' };
+    }
+}
+
+export async function updateBudgetAction(category: string, amount: number) {
+    try {
+        setBudget(category, amount);
+        return { success: true };
+    } catch (error) {
+        console.error('Error in updateBudgetAction:', error);
+        return { success: false, error: 'Failed to update budget' };
+    }
+}
+
+export async function getBudgetsAction(): Promise<CategoryBudget[]> {
+    try {
+        return getBudgets();
+    } catch (error) {
+        console.error('Error in getBudgetsAction:', error);
+        return [];
     }
 }

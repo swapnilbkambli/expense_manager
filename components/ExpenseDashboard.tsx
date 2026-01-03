@@ -15,6 +15,7 @@ import { RollupTable } from './RollupTable';
 import { SpendingHeatmap } from './SpendingHeatmap';
 import { SankeyFlow } from './SankeyFlow';
 import { QuickSummary } from './QuickSummary';
+import SmartInsights from './SmartInsights';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,7 @@ export default function ExpenseDashboard() {
     const [isImporting, setIsImporting] = useState(false);
     const [prevMetrics, setPrevMetrics] = useState<DashboardMetrics | null>(null);
     const [refreshCounter, setRefreshCounter] = useState(0);
+    const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
 
     const [filters, setFilters] = useState<FilterState>({
         dateRange: { from: undefined, to: new Date() },
@@ -42,6 +44,9 @@ export default function ExpenseDashboard() {
         searchQuery: '',
         viewMode: 'expense',
     });
+    const [isSankeyExpanded, setIsSankeyExpanded] = useState(false);
+    const [isHeatmapExpanded, setIsHeatmapExpanded] = useState(false);
+
     const loadData = async (shouldImportDefault = false) => {
         setIsLoading(true);
         try {
@@ -50,13 +55,15 @@ export default function ExpenseDashboard() {
                 await importExpensesAction(csvText);
             }
 
-            const [data, filterMetaData, mapping] = await Promise.all([
+            const [data, filterMetaData, mapping, fullData] = await Promise.all([
                 fetchExpensesAction(filters),
                 getFilterDataAction(),
-                getCategoryMappingAction()
+                getCategoryMappingAction(),
+                fetchExpensesAction({ ...filters, dateRange: { from: undefined, to: undefined }, timeRange: 'All Time', categories: [], subcategories: [], searchQuery: '' })
             ]);
 
             setFilteredExpenses(data);
+            setAllExpenses(fullData);
             setCategories(filterMetaData.categories);
             setSubcategories(filterMetaData.subcategories);
 
@@ -274,11 +281,40 @@ export default function ExpenseDashboard() {
 
             <QuickSummary refreshTrigger={refreshCounter} />
 
-            <div className="grid grid-cols-1 gap-6">
-                <SankeyFlow expenses={filteredExpenses} />
-            </div>
+            <div className="space-y-12">
+                {/* Sankey Flow Section (Collapsible) */}
+                <div className="relative">
+                    <Card className="rounded-2xl border-none shadow-sm overflow-hidden">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <div>
+                                <CardTitle className="text-lg font-black text-slate-800">Sankey Fund Flow</CardTitle>
+                                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">Income to Category Distribution</p>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsSankeyExpanded(!isSankeyExpanded)}
+                                className="font-bold text-slate-600"
+                            >
+                                {isSankeyExpanded ? 'Hide Chart' : 'Show Chart'}
+                            </Button>
+                        </CardHeader>
+                        {isSankeyExpanded && (
+                            <CardContent className="p-0 border-t border-slate-50">
+                                <SankeyFlow expenses={filteredExpenses} />
+                            </CardContent>
+                        )}
+                    </Card>
+                </div>
 
-            <SpendingInsights expenses={filteredExpenses} viewMode={filters.viewMode} />
+                {/* Smart Insights Section */}
+                <div className="relative py-8 border-t border-b border-slate-100 bg-slate-50/10 -mx-4 px-4 sm:-mx-6 sm:px-6">
+                    <SmartInsights expenses={allExpenses} />
+                </div>
+
+                {/* Primary Metrics & Summaries */}
+                <SpendingInsights expenses={filteredExpenses} viewMode={filters.viewMode} />
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card className="lg:col-span-2 rounded-2xl border-none shadow-sm overflow-hidden">
@@ -334,7 +370,30 @@ export default function ExpenseDashboard() {
                 </Card>
             </div>
 
-            <SpendingHeatmap expenses={filteredExpenses} />
+            {/* Daily Heatmap (Collapsible) */}
+            <div className="my-8">
+                <Card className="rounded-2xl border-none shadow-sm overflow-hidden">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <div>
+                            <CardTitle className="text-lg font-black text-slate-800">Daily Activity Heatmap</CardTitle>
+                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">Spending Frequency & Velocity</p>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsHeatmapExpanded(!isHeatmapExpanded)}
+                            className="font-bold text-slate-600"
+                        >
+                            {isHeatmapExpanded ? 'Hide Calendar' : 'Show Calendar'}
+                        </Button>
+                    </CardHeader>
+                    {isHeatmapExpanded && (
+                        <CardContent className="p-0 border-t border-slate-50">
+                            <SpendingHeatmap expenses={filteredExpenses} />
+                        </CardContent>
+                    )}
+                </Card>
+            </div>
 
             <Card className="rounded-2xl border-none shadow-sm overflow-hidden">
                 <CardHeader className="bg-white border-b border-slate-50 pb-2 flex flex-row items-center justify-between">

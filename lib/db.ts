@@ -42,6 +42,17 @@ function initDb() {
         CREATE INDEX IF NOT EXISTS idx_category ON expenses(category);
         CREATE INDEX IF NOT EXISTS idx_subcategory ON expenses(subcategory);
         CREATE INDEX IF NOT EXISTS idx_parsedDate ON expenses(parsedDate);
+
+        CREATE TABLE IF NOT EXISTS budgets (
+            category TEXT PRIMARY KEY,
+            amount REAL
+        );
+
+        CREATE TABLE IF NOT EXISTS ignored_insights (
+            type TEXT,
+            identifier TEXT,
+            PRIMARY KEY (type, identifier)
+        );
     `);
 }
 
@@ -170,4 +181,34 @@ export function getAllExpensesForExport(): Expense[] {
         ...row,
         parsedDate: new Date(row.parsedDate)
     }));
+}
+
+export function setBudget(category: string, amount: number) {
+    const database = getDb();
+    database.prepare('INSERT OR REPLACE INTO budgets (category, amount) VALUES (?, ?)').run(category, amount);
+}
+
+export function getBudgets(): { category: string, amount: number }[] {
+    const database = getDb();
+    return database.prepare('SELECT * FROM budgets').all() as { category: string, amount: number }[];
+}
+
+export function clearBudgets() {
+    const database = getDb();
+    database.prepare('DELETE FROM budgets').run();
+}
+
+export function setIgnoredInsight(type: string, identifier: string) {
+    const database = getDb();
+    database.prepare('INSERT OR REPLACE INTO ignored_insights (type, identifier) VALUES (?, ?)').run(type, identifier);
+}
+
+export function getIgnoredInsights(): { type: string, identifier: string }[] {
+    const database = getDb();
+    return database.prepare('SELECT * FROM ignored_insights').all() as { type: string, identifier: string }[];
+}
+
+export function clearIgnoredInsights() {
+    const database = getDb();
+    database.prepare('DELETE FROM ignored_insights').run();
 }

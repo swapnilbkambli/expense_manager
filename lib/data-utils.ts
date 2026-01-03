@@ -60,10 +60,11 @@ export const calculateMetrics = (expenses: Expense[]): DashboardMetrics => {
     let totalExpenses = 0;
 
     expenses.forEach((expense) => {
+        const absAmount = Math.abs(expense.amount);
         if (expense.amount > 0) {
-            totalIncome += expense.amount;
+            totalIncome += absAmount;
         } else {
-            totalExpenses += Math.abs(expense.amount);
+            totalExpenses += absAmount;
         }
     });
 
@@ -159,4 +160,106 @@ export const toTitleCase = (str: string) => {
         .filter(Boolean)
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
+};
+
+export const detectRecurringExpenses = (expenses: Expense[], ignoredIdentifiers: string[] = []) => {
+    const sorted = [...expenses].sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime());
+    const outgoing = sorted.filter(e => e.amount < 0);
+    const groups: { [key: string]: Expense[] } = {};
+
+    outgoing.forEach(e => {
+        // Group by description + amount (with slight variance allowed)
+        // Simplified: just by normalized description for now
+        const key = e.description.toLowerCase().trim().substring(0, 20);
+        if (ignoredIdentifiers.includes(key)) return;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(e);
+    });
+
+    const recurring = Object.entries(groups)
+        .filter(([_, items]) => items.length >= 2) // Happens at least twice
+        .map(([name, items]) => {
+            // Check if intervals are roughly monthly
+            const intervals = [];
+            for (let i = 1; i < items.length; i++) {
+                const diffDays = (items[i].parsedDate.getTime() - items[i - 1].parsedDate.getTime()) / (1000 * 60 * 60 * 24);
+                intervals.push(diffDays);
+            }
+            const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+            const isMonthly = avgInterval >= 25 && avgInterval <= 35;
+
+            return {
+                description: items[0].description,
+                avgAmount: Math.abs(items.reduce((a, b) => a + b.amount, 0) / items.length),
+                frequency: isMonthly ? 'Monthly' : 'Periodic',
+                count: items.length,
+                lastSeen: items[items.length - 1].date,
+                transactions: items
+            };
+        })
+        .filter(r => r.count >= 3 || r.frequency === 'Monthly')
+        .sort((a, b) => b.avgAmount - a.avgAmount);
+
+    return recurring;
+};
+
+export const detectAnomalies = (expenses: Expense[], ignoredIdentifiers: string[] = []) => {
+    const categories: { [key: string]: number[] } = {};
+    const outgoing = expenses.filter(e => e.amount < 0);
+
+    outgoing.forEach(e => {
+        if (!categories[e.category]) categories[e.category] = [];
+        categories[e.category].push(Math.abs(e.amount));
+    });
+
+    const anomalies: (Expense & { avgForCategory: number })[] = [];
+
+    outgoing.forEach(e => {
+        if (e.rowId && ignoredIdentifiers.includes(e.rowId)) return;
+
+        const amounts = categories[e.category];
+        if (amounts.length < 5) return; // Need some history
+
+        const sum = amounts.reduce((a, b) => a + b, 0);
+        const avg = sum / amounts.length;
+        const current = Math.abs(e.amount);
+
+        // Flag if > 3x average AND > 1000 (to avoid small noise)
+        if (current > avg * 3 && current > 1000) {
+            anomalies.push({ ...e, avgForCategory: avg });
+        }
+    });
+
+    return anomalies.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount)).slice(0, 10);
+};
+
+export const getSavingsRateTrend = (expenses: Expense[]) => {
+    const monthlyData: { [key: string]: { month: string; income: number; consumption: number; savings: number } } = {};
+
+    expenses.forEach(e => {
+        const monthKey = e.date.substring(3); // "MM-YYYY"
+        if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = { month: monthKey, income: 0, consumption: 0, savings: 0 };
+        }
+
+        const absAmount = Math.abs(e.amount);
+        if (e.amount > 0) {
+            monthlyData[monthKey].income += absAmount;
+        } else {
+            monthlyData[monthKey].consumption += absAmount;
+        }
+    });
+
+    return Object.values(monthlyData).map(d => {
+        const totalSavings = d.income - d.consumption;
+        const rate = d.income > 0 ? (totalSavings / d.income) * 100 : 0;
+        return {
+            ...d,
+            savingsRate: parseFloat(rate.toFixed(1))
+        };
+    }).sort((a, b) => {
+        const [ma, ya] = a.month.split('-').map(Number);
+        const [mb, yb] = b.month.split('-').map(Number);
+        return ya !== yb ? ya - yb : ma - mb;
+    });
 };

@@ -58,3 +58,35 @@ export interface SummaryMetrics {
     thisMonth: PeriodSummary;
     ytd: PeriodSummary;
 }
+
+export interface RecurringExpense {
+    description: string;
+    avgAmount: number;
+    frequency: string;
+    count: number;
+    lastSeen: string;
+    transactions: Expense[];
+}
+
+export interface Anomaly extends Expense {
+    avgForCategory: number;
+}
+
+export interface SavingsTrendItem {
+    month: string;
+    income: number;
+    consumption: number;
+    savingsRate: number;
+}
+
+export interface CategoryBudget {
+    category: string;
+    amount: number;
+}
+
+export interface AdvancedInsights {
+    recurring: RecurringExpense[];
+    anomalies: Anomaly[];
+    savingsTrend: SavingsTrendItem[];
+    budgets: CategoryBudget[];
+}
