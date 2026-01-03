@@ -1,8 +1,10 @@
 'use client';
 
+import React, { useState } from 'react';
 import { AlertCircle, ArrowUpRight, TrendingUp, EyeOff } from 'lucide-react';
 import { Anomaly } from '../lib/types/expense';
 import { ignoreInsightAction } from '../lib/actions';
+import { InsightDetailsModal } from './InsightDetailsModal';
 
 interface AnomalyDetectorProps {
     anomalies: Anomaly[];
@@ -10,13 +12,16 @@ interface AnomalyDetectorProps {
 }
 
 export default function AnomalyDetector({ anomalies, onRefresh }: AnomalyDetectorProps) {
+    const [selectedAnomaly, setSelectedAnomaly] = useState<Anomaly | null>(null);
+
     const handleIgnore = async (rowId: string) => {
         await ignoreInsightAction('anomaly', rowId);
         onRefresh();
     };
+
     if (anomalies.length === 0) {
         return (
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col items-center justify-center text-center">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col items-center justify-center text-center min-h-[400px]">
                 <AlertCircle className="w-12 h-12 text-slate-200 mb-4" />
                 <h3 className="text-lg font-black text-slate-900 tracking-tight">Smart Monitoring</h3>
                 <p className="text-sm text-slate-500 font-medium mt-2">Everything looks normal! No unusual spending spikes detected.</p>
@@ -38,7 +43,7 @@ export default function AnomalyDetector({ anomalies, onRefresh }: AnomalyDetecto
                 </div>
             </div>
 
-            <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar relative z-10">
+            <div className="space-y-4 h-[400px] overflow-y-auto pr-2 custom-scrollbar relative z-10">
                 {anomalies.map((anomaly, idx) => {
                     const deviation = (Math.abs(anomaly.amount) / anomaly.avgForCategory).toFixed(1);
 
@@ -82,9 +87,12 @@ export default function AnomalyDetector({ anomalies, onRefresh }: AnomalyDetecto
 
                             <div className="mt-3 flex items-center justify-between text-[11px] font-bold text-slate-500 border-t border-rose-100/50 pt-2">
                                 <span>Typical: ₹{anomaly.avgForCategory.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                                <span className="flex items-center gap-1 text-rose-600">
-                                    View Transaction <ArrowUpRight className="w-3 h-3" />
-                                </span>
+                                <button
+                                    onClick={() => setSelectedAnomaly(anomaly)}
+                                    className="flex items-center gap-1 text-rose-600 hover:underline font-bold"
+                                >
+                                    View Details <ArrowUpRight className="w-3 h-3" />
+                                </button>
                             </div>
                         </div>
                     );
@@ -95,6 +103,14 @@ export default function AnomalyDetector({ anomalies, onRefresh }: AnomalyDetecto
             <div className="absolute -left-8 -bottom-8 opacity-[0.03] pointer-events-none">
                 <AlertCircle className="w-48 h-48 text-rose-900" />
             </div>
+
+            <InsightDetailsModal
+                isOpen={!!selectedAnomaly}
+                onClose={() => setSelectedAnomaly(null)}
+                title="Anomaly Deep Dive"
+                description={`Analysis of unusual spending in ${selectedAnomaly?.category}`}
+                transactions={selectedAnomaly ? [selectedAnomaly] : []}
+            />
         </div>
     );
 }

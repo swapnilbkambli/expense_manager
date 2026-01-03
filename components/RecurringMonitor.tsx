@@ -1,8 +1,10 @@
 'use client';
 
-import { Calendar, Repeat, ArrowRight, EyeOff } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, Repeat, ArrowRight, EyeOff, ArrowUpRight } from 'lucide-react';
 import { RecurringExpense } from '../lib/types/expense';
 import { ignoreInsightAction } from '../lib/actions';
+import { InsightDetailsModal } from './InsightDetailsModal';
 
 interface RecurringMonitorProps {
     recurring: RecurringExpense[];
@@ -10,14 +12,17 @@ interface RecurringMonitorProps {
 }
 
 export default function RecurringMonitor({ recurring, onRefresh }: RecurringMonitorProps) {
+    const [selectedRecurring, setSelectedRecurring] = useState<RecurringExpense | null>(null);
+
     const handleIgnore = async (description: string) => {
         const identifier = description.toLowerCase().trim().substring(0, 20);
         await ignoreInsightAction('recurring', identifier);
         onRefresh();
     };
+
     if (recurring.length === 0) {
         return (
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col items-center justify-center text-center">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col items-center justify-center text-center min-h-[400px]">
                 <Repeat className="w-12 h-12 text-slate-200 mb-4" />
                 <h3 className="text-lg font-black text-slate-900 tracking-tight">Recurring Commitments</h3>
                 <p className="text-sm text-slate-500 font-medium mt-2">No repetitive monthly expenses detected yet.</p>
@@ -39,7 +44,7 @@ export default function RecurringMonitor({ recurring, onRefresh }: RecurringMoni
                 </div>
             </div>
 
-            <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-4 h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                 {recurring.map((item, idx) => (
                     <div
                         key={idx}
@@ -67,14 +72,24 @@ export default function RecurringMonitor({ recurring, onRefresh }: RecurringMoni
                                     </p>
                                     <p className="text-[10px] font-bold text-slate-500 uppercase text-right">Avg / Period</p>
                                 </div>
-                                <button
-                                    onClick={() => handleIgnore(item.description)}
-                                    className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-all flex items-center gap-1"
-                                    title="Ignore this commitment"
-                                >
-                                    <EyeOff className="w-3.5 h-3.5" />
-                                    <span className="text-[9px] font-black uppercase">Ignore</span>
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setSelectedRecurring(item)}
+                                        className="p-1.5 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all flex items-center gap-1"
+                                        title="View transaction history"
+                                    >
+                                        <ArrowUpRight className="w-3.5 h-3.5" />
+                                        <span className="text-[9px] font-black uppercase">History</span>
+                                    </button>
+                                    <button
+                                        onClick={() => handleIgnore(item.description)}
+                                        className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-all flex items-center gap-1"
+                                        title="Ignore this commitment"
+                                    >
+                                        <EyeOff className="w-3.5 h-3.5" />
+                                        <span className="text-[9px] font-black uppercase">Ignore</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -89,6 +104,14 @@ export default function RecurringMonitor({ recurring, onRefresh }: RecurringMoni
                     </div>
                 ))}
             </div>
+
+            <InsightDetailsModal
+                isOpen={!!selectedRecurring}
+                onClose={() => setSelectedRecurring(null)}
+                title="Recurring History"
+                description={`Historical payments for ${selectedRecurring?.description}`}
+                transactions={selectedRecurring?.transactions || []}
+            />
         </div>
     );
 }

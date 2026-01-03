@@ -61,6 +61,8 @@ export interface SummaryMetrics {
 
 export interface RecurringExpense {
     description: string;
+    category: string;
+    subcategory: string;
     avgAmount: number;
     frequency: string;
     count: number;

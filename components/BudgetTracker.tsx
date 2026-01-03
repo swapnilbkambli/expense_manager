@@ -59,7 +59,7 @@ export default function BudgetTracker({ budgets, expenses, onRefresh }: BudgetTr
                 </div>
             </div>
 
-            <div className="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-6 h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                 {categories.map((cat) => {
                     const budget = budgets.find(b => b.category === cat)?.amount || 0;
                     const spent = currentSpend[cat] || 0;

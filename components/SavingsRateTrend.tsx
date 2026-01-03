@@ -61,7 +61,7 @@ export default function SavingsRateTrend({ data }: SavingsRateTrendProps) {
                 </div>
             </div>
 
-            <div className="flex-1 min-h-[250px] w-full">
+            <div className="h-[400px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={displayData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <defs>
