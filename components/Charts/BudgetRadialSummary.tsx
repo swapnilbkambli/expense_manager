@@ -11,15 +11,16 @@ interface ColorTheme {
     text: string;
 }
 
-const THEMES: { [key: string]: ColorTheme } = {
-    indigo: { ring1: '#818cf8', ring2: '#34d399', bg: 'bg-indigo-50/40', border: 'border-indigo-100', text: 'text-indigo-900' },
-    rose: { ring1: '#fb7185', ring2: '#fbbf24', bg: 'bg-rose-50/40', border: 'border-rose-100', text: 'text-rose-900' },
-    emerald: { ring1: '#34d399', ring2: '#60a5fa', bg: 'bg-emerald-50/40', border: 'border-emerald-100', text: 'text-emerald-900' },
-    amber: { ring1: '#fbbf24', ring2: '#f87171', bg: 'bg-amber-50/40', border: 'border-amber-100', text: 'text-amber-900' },
-    cyan: { ring1: '#22d3ee', ring2: '#a78bfa', bg: 'bg-cyan-50/40', border: 'border-cyan-100', text: 'text-cyan-900' },
-    violet: { ring1: '#a78bfa', ring2: '#fb7185', bg: 'bg-violet-50/40', border: 'border-violet-100', text: 'text-violet-900' },
-    sky: { ring1: '#38bdf8', ring2: '#34d399', bg: 'bg-sky-50/40', border: 'border-sky-100', text: 'text-sky-900' },
-    slate: { ring1: '#94a3b8', ring2: '#cbd5e1', bg: 'bg-slate-50/40', border: 'border-slate-200', text: 'text-slate-900' },
+const THEMES: { [key: string]: { primary: string; secondary: string; bg: string; border: string; glow: string } } = {
+    indigo: { primary: '#6366f1', secondary: '#818cf8', bg: 'bg-indigo-50/40', border: 'border-indigo-100/50', glow: 'shadow-indigo-500/20' },
+    rose: { primary: '#f43f5e', secondary: '#fb7185', bg: 'bg-rose-50/40', border: 'border-rose-100/50', glow: 'shadow-rose-500/20' },
+    emerald: { primary: '#10b981', secondary: '#34d399', bg: 'bg-emerald-50/40', border: 'border-emerald-100/50', glow: 'shadow-emerald-500/20' },
+    amber: { primary: '#f59e0b', secondary: '#fbbf24', bg: 'bg-amber-50/40', border: 'border-amber-100/50', glow: 'shadow-amber-500/20' },
+    cyan: { primary: '#06b6d4', secondary: '#22d3ee', bg: 'bg-cyan-50/40', border: 'border-cyan-100/50', glow: 'shadow-cyan-500/20' },
+    violet: { primary: '#8b5cf6', secondary: '#a78bfa', bg: 'bg-violet-50/40', border: 'border-violet-100/50', glow: 'shadow-violet-500/20' },
+    sky: { primary: '#0ea5e9', secondary: '#38bdf8', bg: 'bg-sky-50/40', border: 'border-sky-100/50', glow: 'shadow-sky-500/20' },
+    orange: { primary: '#f97316', secondary: '#fb923c', bg: 'bg-orange-50/40', border: 'border-orange-100/50', glow: 'shadow-orange-500/20' },
+    slate: { primary: '#64748b', secondary: '#94a3b8', bg: 'bg-slate-50/40', border: 'border-slate-200/50', glow: 'shadow-slate-500/10' },
 };
 
 interface BudgetRadialSummaryProps {
@@ -52,36 +53,38 @@ export function BudgetRadialSummary({
     const mPercent = monthlyBudget > 0 ? (monthlySpent / monthlyBudget) * 100 : 0;
     const yPercent = yearlyBudget > 0 ? (yearlySpent / yearlyBudget) * 100 : 0;
 
+    // To show concentric circles, Recharts needs distinct data points that map to the radial axis.
+    // By default, it maps them inner-to-outer.
     const data = [
         {
             name: 'Yearly',
             value: Math.min(yPercent, 100),
-            fill: yPercent > 100 ? '#f43f5e' : theme.ring2,
+            fill: yPercent > 100 ? '#f43f5e' : theme.secondary,
         },
         {
             name: 'Monthly',
             value: Math.min(mPercent, 100),
-            fill: mPercent > 100 ? '#f43f5e' : theme.ring1,
+            fill: mPercent > 100 ? '#f43f5e' : theme.primary,
         }
     ];
 
     return (
-        <div className={`group relative p-5 rounded-3xl border ${theme.border} ${theme.bg} backdrop-blur-sm hover:shadow-xl transition-all duration-500 h-full flex flex-col shadow-sm`}>
+        <div className={`group relative p-6 rounded-[2rem] border ${theme.border} ${theme.bg} ${theme.glow} backdrop-blur-xl hover:shadow-2xl hover:${theme.glow.replace('20', '40')} transition-all duration-500 h-full flex flex-col border-white/40`}>
             {/* Header Controls */}
-            <div className="flex justify-between items-start mb-2 group-hover:opacity-100 opacity-0 transition-opacity absolute top-3 right-3 z-10">
-                <div className="flex gap-1 bg-white/90 backdrop-blur-md rounded-xl p-1 shadow-md border border-slate-100">
+            <div className="flex justify-between items-start mb-2 group-hover:opacity-100 opacity-0 transition-opacity absolute top-4 right-4 z-10">
+                <div className="flex gap-1.5 bg-white/50 backdrop-blur-xl rounded-xl p-1.5 shadow-xl border border-white/40">
                     {onEdit && (
-                        <button onClick={onEdit} className="p-1.5 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-colors">
+                        <button onClick={onEdit} className="p-2 hover:bg-white text-slate-500 hover:text-indigo-600 rounded-lg transition-all shadow-sm">
                             <span className="sr-only">Edit</span>
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                             </svg>
                         </button>
                     )}
                     {onRemove && (
-                        <button onClick={onRemove} className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-colors">
+                        <button onClick={onRemove} className="p-2 hover:bg-white text-slate-500 hover:text-rose-600 rounded-lg transition-all shadow-sm">
                             <span className="sr-only">Remove</span>
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                         </button>
@@ -89,20 +92,20 @@ export function BudgetRadialSummary({
                 </div>
             </div>
 
-            <div className="text-center mb-1 pr-8 truncate">
-                <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-wider truncate">{title}</h4>
-                {subtitle && <p className="text-[9px] font-bold text-slate-500 uppercase truncate leading-none mt-1 opacity-80">{subtitle}</p>}
+            <div className="text-center mb-2 pr-8 truncate">
+                <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.15em] truncate">{title}</h4>
+                {subtitle && <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate leading-none mt-1.5 opacity-80">{subtitle}</p>}
             </div>
 
-            <div className={`flex-1 w-full relative ${isSemi ? 'min-h-[140px]' : 'min-h-[120px]'}`}>
+            <div className={`flex-1 w-full relative ${isSemi ? 'min-h-[160px]' : 'min-h-[140px]'}`}>
                 <ResponsiveContainer width="100%" height="100%">
                     <RadialBarChart
-                        innerRadius={isSemi ? "80%" : "65%"}
+                        innerRadius={isSemi ? "70%" : "70%"}
                         outerRadius="100%"
                         data={data}
                         startAngle={isSemi ? 180 : 90}
                         endAngle={isSemi ? 0 : 450}
-                        barSize={isSemi ? 12 : 8}
+                        barSize={isSemi ? 20 : 12}
                     >
                         <PolarAngleAxis
                             type="number"
@@ -113,29 +116,33 @@ export function BudgetRadialSummary({
                         <RadialBar
                             background={{ fill: '#000', fillOpacity: 0.03 }}
                             dataKey="value"
-                            cornerRadius={12}
+                            cornerRadius={20}
+                            animationDuration={1500}
                         />
                     </RadialBarChart>
                 </ResponsiveContainer>
 
-                <div className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none ${isSemi ? 'pt-8' : ''}`}>
-                    <span className={`font-black tracking-tighter leading-none ${isSemi ? 'text-3xl' : 'text-xl'} ${mPercent > 100 ? 'text-rose-600' : 'text-slate-900'}`}>
+                <div className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none ${isSemi ? 'pt-10' : ''}`}>
+                    <span className={`font-black tracking-tighter leading-none ${isSemi ? 'text-4xl' : 'text-2xl'} ${mPercent > 100 ? 'text-rose-600 drop-shadow-[0_0_10px_rgba(225,29,72,0.3)]' : `text-[${theme.primary}]`}`} style={{ color: mPercent > 100 ? undefined : theme.primary }}>
                         {Math.round(mPercent)}%
                     </span>
-                    <span className="text-[9px] font-black text-slate-400 uppercase mt-1 tracking-widest opacity-60">
-                        {isSemi ? 'Total Health' : 'Health'}
+                    <span className="text-[9px] font-black text-slate-400 uppercase mt-2 tracking-[0.2em]">
+                        {isSemi ? 'Health' : 'Spent'}
                     </span>
                 </div>
             </div>
 
-            <div className={`mt-2 pt-3 border-t border-black/5 flex justify-between items-center px-1 ${isSemi ? 'bg-white/40 -mx-5 px-6 pb-2 rounded-b-3xl' : ''}`}>
+            <div className={`mt-4 pt-4 border-t border-indigo-100/50 flex justify-between items-center px-1 ${isSemi ? 'bg-indigo-50/50 -mx-6 px-8 pb-4 rounded-b-[2rem]' : ''}`}>
                 <div className="flex flex-col items-start gap-1">
-                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-tighter leading-none opacity-60">Target</span>
-                    <span className={`font-black tabular-nums ${isSemi ? 'text-sm text-slate-900' : 'text-[11px] text-slate-900'}`}>₹{Math.round(monthlyBudget).toLocaleString()}</span>
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Target</span>
+                    <span className={`font-black tabular-nums text-slate-900 ${isSemi ? 'text-base' : 'text-xs'}`}>₹{Math.round(monthlyBudget).toLocaleString()}</span>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-tighter leading-none opacity-60">Spent</span>
-                    <span className={`font-black tabular-nums ${isSemi ? 'text-sm' : 'text-[11px]'} ${monthlySpent > monthlyBudget ? 'text-rose-600 animate-pulse' : 'text-slate-900'}`}>₹{Math.round(monthlySpent).toLocaleString()}</span>
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Actual</span>
+                    <span className={`font-black tabular-nums ${isSemi ? 'text-base' : 'text-xs'} ${monthlySpent > monthlyBudget ? 'text-rose-600 flex items-center gap-1' : 'text-slate-900'}`}>
+                        ₹{Math.round(monthlySpent).toLocaleString()}
+                        {monthlySpent > monthlyBudget && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.5)]" />}
+                    </span>
                 </div>
             </div>
         </div>

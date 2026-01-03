@@ -65,64 +65,64 @@ export function SpendingInsights({ expenses, viewMode = 'expense' }: SpendingIns
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-slate-50 border-none shadow-none">
+            <Card className="glass-card bg-white/40 border-white/40 hover:shadow-2xl transition-all duration-300">
                 <CardContent className="pt-6">
-                    <div className="flex items-start gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <Info className="w-4 h-4 text-blue-600" />
+                    <div className="flex items-start gap-4">
+                        <div className="p-3 bg-indigo-500/10 rounded-2xl border border-indigo-100 shadow-sm transition-transform hover:scale-110">
+                            <Info className="w-5 h-5 text-indigo-600" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-slate-500">{isExpense ? 'Avg Monthly Spend' : 'Avg Monthly Income'}</p>
-                            <h4 className="text-xl font-bold text-slate-900">{formatCurrency(insights.avgMonthly)}</h4>
-                            <p className="text-xs text-slate-400 mt-1">Based on {insights.monthsRange} month(s)</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{isExpense ? 'Avg Monthly Spend' : 'Avg Monthly Income'}</p>
+                            <h4 className="text-xl font-black text-slate-900 tracking-tight">{formatCurrency(insights.avgMonthly)}</h4>
+                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Across {insights.monthsRange} month(s)</p>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="bg-slate-50 border-none shadow-none">
+            <Card className="glass-card bg-white/40 border-white/40 hover:shadow-2xl transition-all duration-300">
                 <CardContent className="pt-6">
-                    <div className="flex items-start gap-3">
-                        <div className="p-2 bg-amber-100 rounded-lg">
-                            <Lightbulb className="w-4 h-4 text-amber-600" />
+                    <div className="flex items-start gap-4">
+                        <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-100 shadow-sm transition-transform hover:scale-110">
+                            <Lightbulb className="w-5 h-5 text-amber-600" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-slate-500">{isExpense ? 'Top Category Impact' : 'Primary Income Source'}</p>
-                            <h4 className="text-xl font-bold text-slate-900">{insights.topCategory}</h4>
-                            <p className="text-xs text-slate-400 mt-1">Avg {formatCurrency(insights.topCategoryAvg)} / mo</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{isExpense ? 'Top Category Impact' : 'Primary Income Source'}</p>
+                            <h4 className="text-xl font-black text-slate-900 tracking-tight">{insights.topCategory}</h4>
+                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Avg {formatCurrency(insights.topCategoryAvg)} / mo</p>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="bg-slate-50 border-none shadow-none">
+            <Card className="glass-card bg-white/40 border-white/40 hover:shadow-2xl transition-all duration-300">
                 <CardContent className="pt-6">
-                    <div className="flex items-start gap-3">
-                        <div className="p-2 bg-rose-100 rounded-lg">
-                            <AlertCircle className="w-4 h-4 text-rose-600" />
+                    <div className="flex items-start gap-4">
+                        <div className="p-3 bg-rose-500/10 rounded-2xl border border-rose-100 shadow-sm transition-transform hover:scale-110">
+                            <AlertCircle className="w-5 h-5 text-rose-600" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-slate-500">{isExpense ? 'Peak Spending Period' : 'Highest Income Month'}</p>
-                            <h4 className="text-xl font-bold text-slate-900">{insights.topMonth}</h4>
-                            <p className="text-xs text-slate-400 mt-1">{isExpense ? 'Spike' : 'High'} of {formatCurrency(insights.topMonthAmount || 0)}</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{isExpense ? 'Peak Spending Period' : 'Highest Income Month'}</p>
+                            <h4 className="text-xl font-black text-slate-900 tracking-tight">{insights.topMonth}</h4>
+                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{isExpense ? 'Spike' : 'High'} of {formatCurrency(insights.topMonthAmount || 0)}</p>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="bg-slate-50 border-none shadow-none">
+            <Card className="glass-card bg-white/40 border-white/40 hover:shadow-2xl transition-all duration-300">
                 <CardContent className="pt-6">
-                    <div className="flex items-start gap-3">
-                        <div className="p-2 bg-emerald-100 rounded-lg">
-                            {isExpense ? <TrendingDown className="w-4 h-4 text-emerald-600" /> : <TrendingUp className="w-4 h-4 text-blue-600" />}
+                    <div className="flex items-start gap-4">
+                        <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-100 shadow-sm transition-transform hover:scale-110">
+                            {isExpense ? <TrendingDown className="w-5 h-5 text-emerald-600" /> : <TrendingUp className="w-5 h-5 text-indigo-600" />}
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-slate-500">{isExpense ? 'Potential Savings' : 'Income Stability'}</p>
-                            <h4 className="text-xl font-bold text-slate-900">{isExpense ? '~15% Targeting' : 'Growth Potential'}</h4>
-                            <p className="text-xs text-slate-400 mt-1">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{isExpense ? 'Potential Savings' : 'Income Stability'}</p>
+                            <h4 className="text-xl font-black text-slate-900 tracking-tight">{isExpense ? '~15% Target' : 'Growth Focus'}</h4>
+                            <p className="text-[10px] font-bold text-emerald-600 mt-1 uppercase font-black">
                                 {isExpense
-                                    ? `Aim to save ${formatCurrency(insights.avgMonthly * 0.15)} more`
-                                    : `Focus on scaling ${insights.topCategory}`}
+                                    ? `Save ${formatCurrency(insights.avgMonthly * 0.15)} more`
+                                    : `Scale ${insights.topCategory}`}
                             </p>
                         </div>
                     </div>

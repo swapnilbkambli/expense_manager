@@ -155,18 +155,19 @@ export default function BudgetTracker({ budgets, expenses, onRefresh }: BudgetTr
     }, 0);
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md h-full flex flex-col">
-            <div className="flex items-center justify-between mb-8">
+        <div className="group relative bg-white/40 backdrop-blur-md p-8 rounded-3xl border border-white/40 shadow-2xl shadow-indigo-500/5 transition-all hover:bg-white/50 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-10 border-b border-indigo-100/30 pb-6">
                 <div>
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight">Budget Dashboard</h3>
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight bg-gradient-to-r from-indigo-700 to-indigo-500 bg-clip-text text-transparent">Budget Dashboard</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1.5 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
                         Concentric Target Monitoring
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
                         <DialogTrigger asChild>
-                            <Button className="h-9 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shadow-sm hover:shadow-indigo-100">
+                            <Button className="h-11 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl transition-all shadow-lg shadow-indigo-200 active:scale-95">
                                 <Plus className="h-4 w-4 mr-2" />
                                 New Target
                             </Button>

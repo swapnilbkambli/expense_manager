@@ -208,391 +208,411 @@ export function RollupTable({
     }
 
     return (
-        <div className="space-y-4">
-            <div className="flex flex-wrap gap-2 mb-2">
-                {categories && categories.length > 0 && (
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8">
-                                Filter Categories {activeCategories.length > 0 && `(${activeCategories.length})`}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-56 p-2" align="start">
-                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                                <div className="flex items-center justify-between mb-2 pb-2 border-b">
-                                    <span className="text-xs font-semibold">Filter Category</span>
-                                    {activeCategories.length > 0 && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 text-[10px] uppercase font-bold text-slate-500"
-                                            onClick={() => activeCategories.forEach((cat: string) => onToggleCategory?.(cat))}
-                                        >
-                                            Clear
-                                        </Button>
-                                    )}
-                                </div>
-                                {categories.map(cat => (
-                                    <div key={cat} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
-                                        <Checkbox
-                                            id={`rollup-cat-${cat}`}
-                                            checked={activeCategories.includes(cat)}
-                                            onCheckedChange={() => onToggleCategory?.(cat)}
-                                        />
-                                        <label htmlFor={`rollup-cat-${cat}`} className="text-sm font-normal cursor-pointer flex-1">
-                                            {cat}
-                                        </label>
+        <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-6 bg-white/30 backdrop-blur-sm p-4 rounded-2xl border border-white/60 shadow-sm">
+                <div className="flex flex-wrap gap-2">
+                    {categories && categories.length > 0 && (
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl border-white/40 bg-white/50 font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-white hover:text-indigo-600 transition-all shadow-sm active:scale-95">
+                                    Browse Categories {activeCategories.length > 0 && <span className="ml-2 text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md text-[9px]">{activeCategories.length}</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-56 p-3 rounded-2xl border-white/40 backdrop-blur-xl bg-white/90 shadow-2xl" align="start">
+                                <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                    <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-100">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Domain</span>
+                                        {activeCategories.length > 0 && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 px-2 text-[9px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
+                                                onClick={() => activeCategories.forEach((cat: string) => onToggleCategory?.(cat))}
+                                            >
+                                                Clear
+                                            </Button>
+                                        )}
                                     </div>
-                                ))}
-                            </div>
-                        </PopoverContent>
-                    </Popover>
-                )}
-
-                {subcategories && subcategories.length > 0 && (
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8">
-                                Filter Subcategories {activeSubcategories.length > 0 && `(${activeSubcategories.length})`}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-56 p-2" align="start">
-                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                                <div className="flex items-center justify-between mb-2 pb-2 border-b">
-                                    <span className="text-xs font-semibold">Filter Subcategory</span>
-                                    {activeSubcategories.length > 0 && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 text-[10px] uppercase font-bold text-slate-500"
-                                            onClick={() => activeSubcategories.forEach((sub: string) => onToggleSubcategory?.(sub))}
-                                        >
-                                            Clear
-                                        </Button>
-                                    )}
+                                    <div className="space-y-1">
+                                        {categories.map(cat => (
+                                            <div key={cat} className="flex items-center space-x-2 px-2 py-1.5 hover:bg-indigo-50/50 rounded-xl transition-colors group">
+                                                <Checkbox
+                                                    id={`rollup-cat-${cat}`}
+                                                    checked={activeCategories.includes(cat)}
+                                                    onCheckedChange={() => onToggleCategory?.(cat)}
+                                                    className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                                                />
+                                                <label htmlFor={`rollup-cat-${cat}`} className="text-xs font-bold text-slate-600 group-hover:text-indigo-900 cursor-pointer flex-1">
+                                                    {cat}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                                {(() => {
-                                    const availableSubs = filters?.categories && filters.categories.length > 0
-                                        ? Array.from(new Set(filters.categories.flatMap(cat => categoryMapping[cat] || [])))
-                                            .filter(s => subcategories?.includes(s))
-                                            .sort()
-                                        : subcategories || [];
+                            </PopoverContent>
+                        </Popover>
+                    )}
 
-                                    return availableSubs.map(sub => (
-                                        <div key={sub} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
-                                            <Checkbox
-                                                id={`rollup-sub-${sub}`}
-                                                checked={activeSubcategories.includes(sub)}
-                                                onCheckedChange={() => onToggleSubcategory?.(sub)}
-                                            />
-                                            <label htmlFor={`rollup-sub-${sub}`} className="text-sm font-normal cursor-pointer flex-1">
-                                                {sub}
-                                            </label>
-                                        </div>
-                                    ));
-                                })()}
-                            </div>
-                        </PopoverContent>
-                    </Popover>
-                )}
+                    {subcategories && subcategories.length > 0 && (
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl border-white/40 bg-white/50 font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-white hover:text-indigo-600 transition-all shadow-sm active:scale-95">
+                                    Refine Segments {activeSubcategories.length > 0 && <span className="ml-2 text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md text-[9px]">{activeSubcategories.length}</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-56 p-3 rounded-2xl border-white/40 backdrop-blur-xl bg-white/90 shadow-2xl" align="start">
+                                <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                    <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-100">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Segment</span>
+                                        {activeSubcategories.length > 0 && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 px-2 text-[9px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
+                                                onClick={() => activeSubcategories.forEach((sub: string) => onToggleSubcategory?.(sub))}
+                                            >
+                                                Clear
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div className="space-y-1">
+                                        {(() => {
+                                            const availableSubs = filters?.categories && filters.categories.length > 0
+                                                ? Array.from(new Set(filters.categories.flatMap(cat => categoryMapping[cat] || [])))
+                                                    .filter(s => subcategories?.includes(s))
+                                                    .sort()
+                                                : subcategories || [];
 
-                {(activeCategories.length > 0 || activeSubcategories.length > 0) && (
+                                            return availableSubs.map(sub => (
+                                                <div key={sub} className="flex items-center space-x-2 px-2 py-1.5 hover:bg-indigo-50/50 rounded-xl transition-colors group">
+                                                    <Checkbox
+                                                        id={`rollup-sub-${sub}`}
+                                                        checked={activeSubcategories.includes(sub)}
+                                                        onCheckedChange={() => onToggleSubcategory?.(sub)}
+                                                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                                                    />
+                                                    <label htmlFor={`rollup-sub-${sub}`} className="text-xs font-bold text-slate-600 group-hover:text-indigo-900 cursor-pointer flex-1">
+                                                        {sub}
+                                                    </label>
+                                                </div>
+                                            ));
+                                        })()}
+                                    </div>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    )}
+
+                    {(activeCategories.length > 0 || activeSubcategories.length > 0) && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 px-4 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                            onClick={() => {
+                                activeCategories.forEach((cat: string) => onToggleCategory?.(cat));
+                                activeSubcategories.forEach((sub: string) => onToggleSubcategory?.(sub));
+                            }}
+                        >
+                            Reset Focus
+                            <X className="ml-2 h-3.5 w-3.5" />
+                        </Button>
+                    )}
+                </div>
+
+                <div className="flex items-center bg-white/50 p-1 rounded-xl border border-white/60 shadow-inner">
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 text-red-500 hover:text-red-700"
-                        onClick={() => {
-                            activeCategories.forEach((cat: string) => onToggleCategory?.(cat));
-                            activeSubcategories.forEach((sub: string) => onToggleSubcategory?.(sub));
-                        }}
-                    >
-                        Reset All Filters
-                        <X className="ml-2 h-4 w-4" />
-                    </Button>
-                )}
-
-            </div>
-
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant={mode === 'monthly' ? 'default' : 'outline'}
-                        size="sm"
                         onClick={() => setMode('monthly')}
-                        className="h-8"
+                        className={cn(
+                            "h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                            mode === 'monthly' ? "bg-indigo-500 text-white shadow-md shadow-indigo-200" : "text-slate-400 hover:text-indigo-600"
+                        )}
                     >
                         Monthly
                     </Button>
                     <Button
-                        variant={mode === 'yearly' ? 'default' : 'outline'}
+                        variant="ghost"
                         size="sm"
                         onClick={() => setMode('yearly')}
-                        className="h-8"
+                        className={cn(
+                            "h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                            mode === 'yearly' ? "bg-indigo-500 text-white shadow-md shadow-indigo-200" : "text-slate-400 hover:text-indigo-600"
+                        )}
                     >
                         Yearly
                     </Button>
                 </div>
-                <div className="text-xs text-muted-foreground flex items-center gap-1">
-                    <CalendarRange className="w-3 h-3" />
-                    {mode === 'yearly' ? 'Yearly' : 'Monthly'} aggregation (Hierarchical)
+            </div>
+
+            <div className="rounded-2xl border border-white/40 overflow-hidden shadow-sm bg-white/30 backdrop-blur-sm">
+                <div className="overflow-x-auto custom-scrollbar">
+                    <Table>
+                        <TableHeader className="bg-indigo-50/50 border-b border-indigo-100/50">
+                            <TableRow>
+                                <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500 h-14 min-w-[240px] sticky left-0 bg-white z-10 border-r border-indigo-50 shadow-[4px_0_12px_-4px_rgba(79,70,229,0.08)]">
+                                    Financial Domain / Segment
+                                </TableHead>
+                                {periods.map(p => (
+                                    <TableHead key={p.getTime()} className="text-right font-black text-[10px] uppercase tracking-widest text-slate-500 h-14 whitespace-nowrap px-6 border-r border-indigo-50/20">
+                                        {mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yy')}
+                                    </TableHead>
+                                ))}
+                                <TableHead className="text-right font-black text-[10px] uppercase tracking-widest text-indigo-600 bg-indigo-50/80 h-14 min-w-[120px] pr-8">
+                                    Total
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {data.categories.map(cat => {
+                                const isExpanded = expandedCategories.has(cat);
+                                const catData = data.catMap[cat];
+                                let catTotal = 0;
+
+                                return (
+                                    <React.Fragment key={cat}>
+                                        <TableRow className="group transition-colors border-indigo-50/20">
+                                            <TableCell className="sticky left-0 bg-white/95 group-hover:bg-indigo-50/30 z-10 border-r border-indigo-50 shadow-[4px_0_12px_-4px_rgba(79,70,229,0.08)] py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        onClick={() => toggleCategoryExpand(cat)}
+                                                        className="p-1.5 hover:bg-white rounded-lg transition-all shadow-sm active:scale-95 bg-white/50 border border-indigo-50"
+                                                    >
+                                                        {isExpanded ? (
+                                                            <ChevronDown className="w-4 h-4 text-indigo-500" />
+                                                        ) : (
+                                                            <ChevronRight className="w-4 h-4 text-slate-300" />
+                                                        )}
+                                                    </button>
+                                                    <span
+                                                        className="font-black text-[13px] tracking-tight text-slate-900 cursor-pointer hover:text-indigo-600 transition-colors"
+                                                        onClick={() => toggleCategoryExpand(cat)}
+                                                    >
+                                                        {cat}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            {periods.map(p => {
+                                                const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
+                                                const val = catData.periodTotals[key] || 0;
+                                                catTotal += val;
+
+                                                const periodExpenses = dataRecords.filter(e => {
+                                                    const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
+                                                    return e.category === cat && pKey === key;
+                                                });
+
+                                                return (
+                                                    <TableCell key={p.getTime()} className="text-right p-0 border-r border-indigo-50/10">
+                                                        {val > 0 ? (
+                                                            <Button
+                                                                variant="ghost"
+                                                                className="w-full justify-end h-14 px-6 font-black text-sm tracking-tight text-slate-800 hover:bg-indigo-50/50 hover:text-indigo-700 rounded-none transition-all group-hover:bg-white/40"
+                                                                onClick={() => setDrillDownData({
+                                                                    category: cat,
+                                                                    periodLabel: key,
+                                                                    expenses: periodExpenses
+                                                                })}
+                                                            >
+                                                                {formatCurrency(val)}
+                                                            </Button>
+                                                        ) : (
+                                                            <div className="h-14 flex items-center justify-end px-6 group-hover:bg-white/20 transition-colors">
+                                                                <span className="text-[10px] font-black text-slate-200 italic tracking-widest opacity-40">--</span>
+                                                            </div>
+                                                        )}
+                                                    </TableCell>
+                                                );
+                                            })}
+                                            <TableCell className="text-right font-black text-sm tracking-tight text-indigo-600 bg-indigo-50/40 pr-8 group-hover:bg-indigo-100/50 transition-colors">
+                                                {formatCurrency(catTotal)}
+                                            </TableCell>
+                                        </TableRow>
+
+                                        {isExpanded && Object.keys(catData.subcategories).sort().map(sub => {
+                                            let subTotal = 0;
+                                            const subData = catData.subcategories[sub];
+                                            return (
+                                                <TableRow key={`${cat}-${sub}`} className="bg-white/40 hover:bg-indigo-50/20 transition-colors group/sub">
+                                                    <TableCell className="pl-12 sticky left-0 bg-white/95 group-hover/sub:bg-indigo-50/30 z-10 border-r border-indigo-50 shadow-[4px_0_12px_-4px_rgba(79,70,229,0.08)] py-2 transition-all">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-indigo-200/60 font-black text-[10px]">└─</span>
+                                                            <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover/sub:text-indigo-600 transition-colors">{sub}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    {periods.map(p => {
+                                                        const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
+                                                        const val = subData[key] || 0;
+                                                        subTotal += val;
+
+                                                        const periodExpenses = dataRecords.filter(e => {
+                                                            const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
+                                                            return e.category === cat && (e.subcategory || 'Other') === sub && pKey === key;
+                                                        });
+
+                                                        return (
+                                                            <TableCell key={p.getTime()} className="text-right p-0 border-r border-indigo-50/5">
+                                                                {val > 0 ? (
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        className="w-full justify-end h-11 px-6 text-[12px] font-bold tracking-tight text-slate-400 hover:bg-white/80 hover:text-indigo-500 rounded-none transition-all"
+                                                                        onClick={() => setDrillDownData({
+                                                                            category: `${cat} / ${sub}`,
+                                                                            periodLabel: key,
+                                                                            expenses: periodExpenses
+                                                                        })}
+                                                                    >
+                                                                        {formatCurrency(val)}
+                                                                    </Button>
+                                                                ) : (
+                                                                    <div className="h-11 flex items-center justify-end px-6 group-hover/sub:bg-white/20 transition-colors">
+                                                                        <span className="text-[9px] font-black text-slate-200 opacity-20 transform scale-x-75">-</span>
+                                                                    </div>
+                                                                )}
+                                                            </TableCell>
+                                                        );
+                                                    })}
+                                                    <TableCell className="text-right font-black text-[12px] tracking-tight text-indigo-400 bg-indigo-50/20 pr-8 group-hover/sub:bg-indigo-50/40 transition-colors">
+                                                        {formatCurrency(subTotal)}
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </React.Fragment>
+                                );
+                            })}
+                            <TableRow className="bg-indigo-600 hover:bg-indigo-700 transition-colors select-none">
+                                <TableCell className="h-14 sticky left-0 bg-indigo-600 z-10 border-r border-indigo-500/30">
+                                    <span className="font-black text-[10px] uppercase tracking-[0.3em] text-white/90 pl-3">Total Rollup</span>
+                                </TableCell>
+                                {periods.map(p => {
+                                    const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
+                                    let colTotal = 0;
+                                    data.categories.forEach(cat => {
+                                        colTotal += data.catMap[cat].periodTotals[key] || 0;
+                                    });
+                                    return (
+                                        <TableCell key={p.getTime()} className="text-right pr-6 h-14 border-r border-indigo-500/30">
+                                            <span className="font-black text-sm tracking-tight text-white leading-none">
+                                                {formatCurrency(colTotal)}
+                                            </span>
+                                        </TableCell>
+                                    );
+                                })}
+                                <TableCell className="text-right bg-indigo-900 pr-8 h-14">
+                                    <span className="font-black text-base tracking-tight text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)] leading-none">
+                                        {formatCurrency(
+                                            periods.reduce((acc, p) => {
+                                                const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
+                                                let colTotal = 0;
+                                                data.categories.forEach(cat => {
+                                                    colTotal += data.catMap[cat].periodTotals[key] || 0;
+                                                });
+                                                return acc + colTotal;
+                                            }, 0)
+                                        )}
+                                    </span>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </div>
             </div>
 
-            <div className="border rounded-md overflow-x-auto">
-                <Table>
-                    <TableHeader className="bg-slate-50">
-                        <TableRow>
-                            <TableHead className="font-bold min-w-[200px] sticky left-0 bg-slate-50 z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                                Category / Subcategory
-                            </TableHead>
-                            {periods.map(p => (
-                                <TableHead key={p.getTime()} className="text-right font-bold whitespace-nowrap px-4">
-                                    {mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yy')}
-                                </TableHead>
-                            ))}
-                            <TableHead className="text-right font-bold bg-blue-50 text-blue-700 min-w-[100px]">
-                                Total
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {data.categories.map(cat => {
-                            const isExpanded = expandedCategories.has(cat);
-                            const catData = data.catMap[cat];
-                            let catTotal = 0;
-
-                            return (
-                                <React.Fragment key={cat}>
-                                    <TableRow className="bg-slate-50/50 hover:bg-slate-100 transition-colors group">
-                                        <TableCell className="font-bold sticky left-0 bg-slate-50 hover:bg-slate-100 z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] py-2">
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => toggleCategoryExpand(cat)}
-                                                    className="p-1 hover:bg-slate-200 rounded transition-colors"
-                                                >
-                                                    {isExpanded ? (
-                                                        <ChevronDown className="w-4 h-4 text-slate-500" />
-                                                    ) : (
-                                                        <ChevronRight className="w-4 h-4 text-slate-500" />
-                                                    )}
-                                                </button>
-                                                <span
-                                                    className="cursor-pointer hover:underline text-slate-900"
-                                                    onClick={() => toggleCategoryExpand(cat)}
-                                                >
-                                                    {cat}
-                                                </span>
-                                            </div>
-                                        </TableCell>
-                                        {periods.map(p => {
-                                            const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
-                                            const val = catData.periodTotals[key] || 0;
-                                            catTotal += val;
-
-                                            const periodExpenses = dataRecords.filter(e => {
-                                                const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
-                                                return e.category === cat && pKey === key;
-                                            });
-
-                                            return (
-                                                <TableCell key={p.getTime()} className="text-right p-0">
-                                                    {val > 0 ? (
-                                                        <Button
-                                                            variant="ghost"
-                                                            className="w-full justify-end h-10 font-bold hover:bg-blue-50 hover:text-blue-600 rounded-none transition-colors"
-                                                            onClick={() => setDrillDownData({
-                                                                category: cat,
-                                                                periodLabel: key,
-                                                                expenses: periodExpenses
-                                                            })}
-                                                        >
-                                                            {formatCurrency(val)}
-                                                        </Button>
-                                                    ) : (
-                                                        <span className="text-muted-foreground mr-4 opacity-30 text-xs">-</span>
-                                                    )}
-                                                </TableCell>
-                                            );
-                                        })}
-                                        <TableCell className="text-right font-bold bg-blue-50/50 text-blue-800 pr-4">
-                                            {formatCurrency(catTotal)}
-                                        </TableCell>
-                                    </TableRow>
-
-                                    {isExpanded && Object.keys(catData.subcategories).sort().map(sub => {
-                                        let subTotal = 0;
-                                        const subData = catData.subcategories[sub];
-                                        return (
-                                            <TableRow key={`${cat}-${sub}`} className="bg-white hover:bg-slate-50 transition-colors group">
-                                                <TableCell className="font-medium pl-10 sticky left-0 bg-white z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] py-1.5 transition-all text-xs">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-slate-400 group-hover:text-blue-500 transition-colors">└─</span>
-                                                        <span className="text-slate-600 group-hover:text-slate-900">{sub}</span>
-                                                    </div>
-                                                </TableCell>
-                                                {periods.map(p => {
-                                                    const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
-                                                    const val = subData[key] || 0;
-                                                    subTotal += val;
-
-                                                    const periodExpenses = dataRecords.filter(e => {
-                                                        const pKey = mode === 'yearly' ? format(e.parsedDate, 'yyyy') : format(e.parsedDate, 'MMM yyyy');
-                                                        return e.category === cat && (e.subcategory || 'Other') === sub && pKey === key;
-                                                    });
-
-                                                    return (
-                                                        <TableCell key={p.getTime()} className="text-right p-0 border-l border-slate-50/10">
-                                                            {val > 0 ? (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    className="w-full justify-end h-8 text-xs font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-500 rounded-none transition-colors px-4"
-                                                                    onClick={() => setDrillDownData({
-                                                                        category: `${cat} > ${sub}`,
-                                                                        periodLabel: key,
-                                                                        expenses: periodExpenses
-                                                                    })}
-                                                                >
-                                                                    {formatCurrency(val)}
-                                                                </Button>
-                                                            ) : (
-                                                                <span className="text-slate-200 mr-4 text-[10px]">-</span>
-                                                            )}
-                                                        </TableCell>
-                                                    );
-                                                })}
-                                                <TableCell className="text-right font-semibold text-blue-600/60 pr-4 text-xs bg-blue-50/10">
-                                                    {formatCurrency(subTotal)}
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </React.Fragment>
-                            );
-                        })}
-                        <TableRow className="bg-slate-100 font-bold">
-                            <TableCell className="sticky left-0 bg-slate-100 z-10 border-r">
-                                TOTAL
-                            </TableCell>
-                            {periods.map(p => {
-                                const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
-                                let colTotal = 0;
-                                data.categories.forEach(cat => {
-                                    colTotal += data.catMap[cat].periodTotals[key] || 0;
-                                });
-                                return (
-                                    <TableCell key={p.getTime()} className="text-right pr-4">
-                                        {formatCurrency(colTotal)}
-                                    </TableCell>
-                                );
-                            })}
-                            <TableCell className="text-right bg-blue-100 text-blue-800 pr-4">
-                                {formatCurrency(
-                                    periods.reduce((acc, p) => {
-                                        const key = mode === 'yearly' ? format(p, 'yyyy') : format(p, 'MMM yyyy');
-                                        let colTotal = 0;
-                                        data.categories.forEach(cat => {
-                                            colTotal += data.catMap[cat].periodTotals[key] || 0;
-                                        });
-                                        return acc + colTotal;
-                                    }, 0)
-                                )}
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-            </div>
-
             <Dialog open={!!drillDownData} onOpenChange={(open) => !open && setDrillDownData(null)}>
-                <DialogContent className="max-w-[95vw] w-full sm:max-w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-6">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-xl">
-                            <ListFilter className="w-5 h-5 text-blue-600" />
-                            Transactions Details
+                <DialogContent className="max-w-[95vw] w-full sm:max-w-[1000px] h-[85vh] overflow-hidden flex flex-col p-8 rounded-[2rem] border-white/40 backdrop-blur-3xl bg-white/80 shadow-2xl">
+                    <DialogHeader className="mb-6">
+                        <DialogTitle className="flex items-center gap-4 text-2xl font-black tracking-tight text-slate-800">
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-200">
+                                <ListFilter className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span>Transaction Inventory</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">
+                                    Deep Dive Analysis
+                                </span>
+                            </div>
                         </DialogTitle>
-                        <DialogDescription>
-                            Showing <strong>{drillDownData?.expenses.length}</strong> transactions for
-                            <Badge variant="outline" className="mx-1 bg-slate-50">{drillDownData?.category}</Badge>
-                            in <strong>{drillDownData?.periodLabel}</strong>
-                        </DialogDescription>
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                            <div className="bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100/50">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 block mb-0.5">Focus Area</span>
+                                <span className="text-xs font-black text-indigo-600">{drillDownData?.category}</span>
+                            </div>
+                            <div className="bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-0.5">Time Period</span>
+                                <span className="text-xs font-black text-slate-600">{drillDownData?.periodLabel}</span>
+                            </div>
+                            <div className="bg-white/50 px-4 py-2 rounded-xl border border-white mx-auto ml-auto mr-0 shadow-sm">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-0.5">Record Count</span>
+                                <span className="text-xs font-black text-indigo-600">{drillDownData?.expenses.length} Entries</span>
+                            </div>
+                        </div>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-auto mt-4 rounded-md border">
+                    <div className="flex-1 overflow-auto custom-scrollbar rounded-2xl border border-indigo-50 shadow-inner bg-white/40 backdrop-blur-sm">
                         <Table>
-                            <TableHeader className="bg-slate-50 sticky top-0 z-20">
+                            <TableHeader className="bg-indigo-50/30 sticky top-0 z-20 backdrop-blur-md">
                                 <TableRow>
                                     <TableHead
-                                        className="w-[120px] cursor-pointer hover:bg-slate-100 transition-colors"
+                                        className="w-[120px] h-14 cursor-pointer hover:bg-white/50 transition-colors font-black text-[10px] uppercase tracking-widest text-slate-500"
                                         onClick={() => handleModalSort('parsedDate')}
                                     >
-                                        <div className="flex items-center">
+                                        <div className="flex items-center gap-2 pl-4">
                                             Date {getModalSortIcon('parsedDate')}
                                         </div>
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer hover:bg-slate-100 transition-colors"
-                                        onClick={() => handleModalSort('category')}
-                                    >
-                                        <div className="flex items-center">
-                                            Category {getModalSortIcon('category')}
-                                        </div>
-                                    </TableHead>
-                                    <TableHead
-                                        className="cursor-pointer hover:bg-slate-100 transition-colors"
-                                        onClick={() => handleModalSort('subcategory')}
-                                    >
-                                        <div className="flex items-center">
-                                            Subcategory {getModalSortIcon('subcategory')}
-                                        </div>
-                                    </TableHead>
-                                    <TableHead
-                                        className="cursor-pointer hover:bg-slate-100 transition-colors"
+                                        className="cursor-pointer h-14 hover:bg-white/50 transition-colors font-black text-[10px] uppercase tracking-widest text-slate-500"
                                         onClick={() => handleModalSort('payeePayer')}
                                     >
-                                        <div className="flex items-center">
-                                            Payee/Payer {getModalSortIcon('payeePayer')}
+                                        <div className="flex items-center gap-2">
+                                            Payee / Activity {getModalSortIcon('payeePayer')}
                                         </div>
                                     </TableHead>
-                                    <TableHead>Description</TableHead>
+                                    <TableHead className="h-14 font-black text-[10px] uppercase tracking-widest text-slate-500">Activity Detail</TableHead>
                                     <TableHead
-                                        className="text-right w-[150px] cursor-pointer hover:bg-slate-100 transition-colors"
+                                        className="text-right w-[150px] h-14 cursor-pointer hover:bg-white/50 transition-colors font-black text-[10px] uppercase tracking-widest text-slate-500"
                                         onClick={() => handleModalSort('absAmount')}
                                     >
-                                        <div className="flex items-center justify-end">
-                                            Amount {getModalSortIcon('absAmount')}
+                                        <div className="flex items-center justify-end gap-2 pr-4">
+                                            Value {getModalSortIcon('absAmount')}
                                         </div>
                                     </TableHead>
-                                    <TableHead className="w-[80px]"></TableHead>
+                                    <TableHead className="w-[80px] h-14"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {sortedDrillDownExpenses.map((expense, idx) => (
-                                    <TableRow key={`${expense.rowId}-${idx}`}>
-                                        <TableCell className="whitespace-nowrap font-medium">
-                                            {format(expense.parsedDate, 'dd-MM-yyyy')}
-                                        </TableCell>
-                                        <TableCell className="whitespace-nowrap">
-                                            <Badge variant="secondary" className="font-normal">{expense.category}</Badge>
-                                        </TableCell>
-                                        <TableCell className="whitespace-nowrap">
-                                            {expense.subcategory || '-'}
-                                        </TableCell>
-                                        <TableCell className="max-w-[200px] truncate font-medium">
-                                            {expense.payeePayer || '-'}
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground italic max-w-xs truncate">
-                                            {expense.description}
-                                        </TableCell>
-                                        <TableCell className="text-right font-semibold text-foreground">
-                                            {Math.abs(expense.amount).toLocaleString('en-IN', {
-                                                style: 'currency',
-                                                currency: 'INR'
-                                            })}
+                                    <TableRow key={`${expense.rowId}-${idx}`} className="hover:bg-indigo-50/20 transition-colors group">
+                                        <TableCell className="pl-6 py-4">
+                                            <span className="text-xs font-black text-slate-400 tracking-tighter">
+                                                {format(expense.parsedDate, 'dd-MM-yyyy')}
+                                            </span>
                                         </TableCell>
                                         <TableCell>
+                                            <span className="text-sm font-black text-slate-800 tracking-tight block max-w-xs truncate group-hover:text-indigo-900 transition-colors">
+                                                {expense.payeePayer || '-'}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="text-[11px] font-bold text-slate-400 italic">
+                                                {expense.description}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right pr-6">
+                                            <span className="text-sm font-black tracking-tight text-slate-900">
+                                                {Math.abs(expense.amount).toLocaleString('en-IN', {
+                                                    style: 'currency',
+                                                    currency: 'INR',
+                                                    maximumFractionDigits: 0
+                                                })}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="pr-6 text-right">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                                                className="h-9 w-9 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl transition-all shadow-sm active:scale-95"
                                                 onClick={() => setEditingExpense(expense)}
                                             >
                                                 <Edit className="h-4 w-4" />

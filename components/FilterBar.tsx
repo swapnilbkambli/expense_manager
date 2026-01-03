@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Calendar as CalendarIcon, X, Search, Filter, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, X, Search, Filter, AlertCircle, Target } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { getDateRangeFromType } from '@/lib/data-utils';
@@ -165,28 +165,28 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
         (filters.timeRange !== 'All Time' ? 1 : 0);
 
     return (
-        <div className="flex flex-col gap-4 bg-card p-4 rounded-xl border shadow-sm">
-            <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col gap-4 bg-white/40 backdrop-blur-md p-5 rounded-2xl border border-white/40 shadow-xl shadow-indigo-500/5">
+            <div className="flex flex-wrap items-center gap-4">
                 {/* Search */}
-                <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <div className="relative flex-1 min-w-[240px] group">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                     <Input
                         placeholder="Search description, category..."
-                        className="pl-9 h-10 border-slate-300 placeholder:text-slate-400 font-medium"
+                        className="pl-10 h-11 bg-white/50 border-white/60 focus:bg-white focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 font-bold transition-all rounded-xl shadow-sm"
                         value={filters.searchQuery}
                         onChange={(e) => setFilters((prev) => ({ ...prev, searchQuery: e.target.value }))}
                     />
                 </div>
 
                 {/* View Mode Toggle */}
-                <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+                <div className="flex items-center bg-slate-200/50 backdrop-blur-sm p-1.5 rounded-xl border border-white/40 shadow-inner">
                     <button
                         onClick={() => setFilters(prev => ({ ...prev, viewMode: 'expense' }))}
                         className={cn(
-                            "px-3 py-1.5 text-xs font-bold rounded-md transition-all",
+                            "px-4 py-2 text-[11px] font-black uppercase tracking-widest rounded-lg transition-all transform active:scale-95",
                             filters.viewMode === 'expense'
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+                                : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
                         )}
                     >
                         Expenses
@@ -194,10 +194,10 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
                     <button
                         onClick={() => setFilters(prev => ({ ...prev, viewMode: 'income' }))}
                         className={cn(
-                            "px-3 py-1.5 text-xs font-bold rounded-md transition-all",
+                            "px-4 py-2 text-[11px] font-black uppercase tracking-widest rounded-lg transition-all transform active:scale-95",
                             filters.viewMode === 'income'
-                                ? 'bg-white text-emerald-600 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200'
+                                : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
                         )}
                     >
                         Income
@@ -206,20 +206,22 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
 
                 {/* Time Range */}
                 <Select value={filters.timeRange} onValueChange={handleTimeRangeChange}>
-                    <SelectTrigger className="w-[160px] h-10">
-                        <CalendarIcon className="w-4 h-4 mr-2" />
-                        <SelectValue placeholder="Time Range" />
+                    <SelectTrigger className="w-[180px] h-11 bg-white/50 border-white/60 focus:ring-4 focus:ring-indigo-500/10 font-bold rounded-xl shadow-sm">
+                        <div className="flex items-center">
+                            <CalendarIcon className="w-4 h-4 mr-2.5 text-indigo-500" />
+                            <SelectValue placeholder="Time Range" />
+                        </div>
                     </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="All Time">All Time</SelectItem>
-                        <SelectItem value="YTD">YTD</SelectItem>
-                        <SelectItem value="Last 30 Days">Last 30 Days</SelectItem>
-                        <SelectItem value="Last 1 Year">Last 1 Year</SelectItem>
-                        <SelectItem value="Last 2 Years">Last 2 Years</SelectItem>
-                        <SelectItem value="Last 3 Years">Last 3 Years</SelectItem>
-                        <SelectItem value="Last 4 Years">Last 4 Years</SelectItem>
-                        <SelectItem value="Last 5 Years">Last 5 Years</SelectItem>
-                        <SelectItem value="Custom">Custom</SelectItem>
+                    <SelectContent className="rounded-xl border-white/40 shadow-2xl">
+                        <SelectItem value="All Time" className="font-bold">All Time</SelectItem>
+                        <SelectItem value="YTD" className="font-bold">Year to Date (YTD)</SelectItem>
+                        <SelectItem value="Last 30 Days" className="font-bold">Last 30 Days</SelectItem>
+                        <SelectItem value="Last 1 Year" className="font-bold">Last 1 Year</SelectItem>
+                        <SelectItem value="Last 2 Years" className="font-bold">Last 2 Years</SelectItem>
+                        <SelectItem value="Last 3 Years" className="font-bold">Last 3 Years</SelectItem>
+                        <SelectItem value="Last 4 Years" className="font-bold">Last 4 Years</SelectItem>
+                        <SelectItem value="Last 5 Years" className="font-bold">Last 5 Years</SelectItem>
+                        <SelectItem value="Custom" className="font-bold">Custom Range...</SelectItem>
                     </SelectContent>
                 </Select>
 
@@ -315,20 +317,13 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
                 {/* Categories Popover */}
                 <Popover>
                     <PopoverTrigger asChild>
-                        <Button variant="outline" className="h-10">
+                        <Button variant="outline" className="h-11 bg-white/50 border-white/60 focus:ring-4 focus:ring-indigo-500/10 font-bold rounded-xl shadow-sm px-4">
+                            <Filter className="w-4 h-4 mr-2 text-indigo-500" />
                             Categories
                             {filters.categories.length > 0 && (
-                                <Badge variant="secondary" className="ml-2 rounded-sm px-1 font-normal lg:hidden">
+                                <Badge className="ml-2 bg-indigo-600 text-white border-none shadow-sm h-5 px-1.5 text-[10px] font-black">
                                     {filters.categories.length}
                                 </Badge>
-                            )}
-                            {filters.categories.length > 0 && (
-                                <div className="hidden space-x-1 lg:flex ml-2">
-                                    <Separator orientation="vertical" className="mx-2 h-4" />
-                                    <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                                        {filters.categories.length} selected
-                                    </Badge>
-                                </div>
                             )}
                         </Button>
                     </PopoverTrigger>
@@ -372,10 +367,11 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
                 {/* Subcategories Popover */}
                 <Popover>
                     <PopoverTrigger asChild>
-                        <Button variant="outline" className="h-10">
+                        <Button variant="outline" className="h-11 bg-white/50 border-white/60 focus:ring-4 focus:ring-indigo-500/10 font-bold rounded-xl shadow-sm px-4">
+                            <Target className="w-4 h-4 mr-2 text-indigo-500" />
                             Subcategories
                             {filters.subcategories.length > 0 && (
-                                <Badge variant="secondary" className="ml-2 rounded-sm px-1 font-normal">
+                                <Badge className="ml-2 bg-indigo-600 text-white border-none shadow-sm h-5 px-1.5 text-[10px] font-black">
                                     {filters.subcategories.length}
                                 </Badge>
                             )}
@@ -419,7 +415,7 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
                 </Popover>
 
                 {activeFilterCount > 0 && (
-                    <Button variant="ghost" className="h-10 px-2 lg:px-3 text-red-500 hover:text-red-700" onClick={resetFilters}>
+                    <Button variant="ghost" className="h-11 px-4 text-rose-500 hover:text-rose-600 hover:bg-rose-50 font-black uppercase text-[10px] tracking-widest transition-all rounded-xl" onClick={resetFilters}>
                         Reset
                         <X className="ml-2 h-4 w-4" />
                     </Button>

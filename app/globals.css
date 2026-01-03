@@ -119,8 +119,31 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-slate-50/50 text-foreground min-h-screen selection:bg-indigo-100 selection:text-indigo-900;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
+  }
+
+  .vibrant-glow {
+    @apply relative after:absolute after:inset-0 after:z-[-1] after:rounded-[inherit] after:bg-gradient-to-tr after:opacity-0 hover:after:opacity-10 transition-all duration-500;
+  }
+
+  .premium-gradient-indigo {
+    @apply bg-gradient-to-br from-indigo-500 to-violet-600 text-white;
+  }
+
+  .premium-gradient-rose {
+    @apply bg-gradient-to-br from-rose-500 to-orange-600 text-white;
+  }
+
+  .premium-gradient-emerald {
+    @apply bg-gradient-to-br from-emerald-500 to-teal-600 text-white;
   }
 }
 

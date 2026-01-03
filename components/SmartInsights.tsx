@@ -45,15 +45,19 @@ export default function SmartInsights({ expenses }: SmartInsightsProps) {
     if (!insights) return null;
 
     return (
-        <div className="space-y-8">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
-                        <Sparkles className="w-6 h-6 text-white" />
+        <div className="space-y-10">
+            <div className="flex items-center justify-between border-b border-indigo-100/30 pb-8">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/20 relative group overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <Sparkles className="w-6 h-6 text-white relative z-10" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Smart Discovery</h2>
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-0.5">Automated Intelligence & Planning</p>
+                        <h2 className="text-3xl font-black text-slate-900 tracking-tight bg-gradient-to-r from-indigo-700 to-indigo-500 bg-clip-text text-transparent">Smart Intelligence</h2>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1.5 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                            Automated Pattern Analysis & Forecasting
+                        </p>
                     </div>
                 </div>
             </div>

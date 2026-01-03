@@ -255,43 +255,43 @@ export default function ExpenseDashboard() {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 p-2 sm:p-4 rounded-3xl bg-slate-50/30 backdrop-blur-sm border border-white/20 shadow-2xl shadow-indigo-500/5">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-indigo-100/30">
                 <div className="flex flex-col gap-2">
-                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-1">
-                        Personal Expense Analytics
+                    <h1 className="text-4xl font-black tracking-tight text-slate-900 bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600 bg-clip-text text-transparent">
+                        Financial Intelligence
                     </h1>
                     {filteredExpenses.length > 0 && (
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                Active Period:
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                                Monitored Period:
                             </span>
-                            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                            <div className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black bg-indigo-500 text-white shadow-lg shadow-indigo-100 uppercase tracking-wider">
                                 {filters.dateRange.from ? format(filters.dateRange.from, 'dd MMM yyyy') : format(new Date(Math.min(...filteredExpenses.map(e => e.parsedDate.getTime()))), 'dd MMM yyyy')}
-                                <span className="mx-1.5 opacity-50">—</span>
+                                <span className="mx-2 opacity-50">—</span>
                                 {filters.dateRange.to ? format(filters.dateRange.to, 'dd MMM yyyy') : format(new Date(Math.max(...filteredExpenses.map(e => e.parsedDate.getTime()))), 'dd MMM yyyy')}
                             </div>
                         </div>
                     )}
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                     <Button
-                        variant="outline"
+                        variant="default"
                         size="sm"
                         onClick={handleSync}
                         disabled={isImporting}
-                        className="bg-indigo-50 border-indigo-100 text-indigo-700 hover:bg-indigo-100 font-bold"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] tracking-[0.15em] px-5 h-11 rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95"
                     >
                         {isImporting ? (
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : (
                             <RefreshCw className="w-4 h-4 mr-2" />
                         )}
-                        Sync from Source
+                        Sync Intelligence
                     </Button>
-                    <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                    <Button variant="outline" size="sm" onClick={handleExportCSV} className="h-11 px-5 rounded-xl border-white/60 bg-white/50 backdrop-blur-sm font-black uppercase text-[10px] tracking-[0.15em] text-slate-600 hover:bg-white hover:text-indigo-600 transition-all shadow-sm">
                         <Download className="w-4 h-4 mr-2" />
-                        Export
+                        Export Data
                     </Button>
                     <input
                         type="file"
@@ -300,12 +300,12 @@ export default function ExpenseDashboard() {
                         accept=".csv"
                         onChange={handleFileUpload}
                     />
-                    <Button variant="outline" size="sm" asChild disabled={isImporting}>
+                    <Button variant="outline" size="sm" asChild disabled={isImporting} className="h-11 px-5 rounded-xl border-white/60 bg-white/50 backdrop-blur-sm font-black uppercase text-[10px] tracking-[0.15em] text-slate-600 hover:bg-white hover:text-indigo-600 transition-all shadow-sm">
                         <label htmlFor="csv-upload-top" className="cursor-pointer">
                             {isImporting ? (
-                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importing...</>
+                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> ...</>
                             ) : (
-                                <><Upload className="w-4 h-4 mr-2" /> Local CSV</>
+                                <><Upload className="w-4 h-4 mr-2" /> Import Local</>
                             )}
                         </label>
                     </Button>

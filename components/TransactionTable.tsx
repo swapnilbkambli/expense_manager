@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, X, Edit, ChevronRight as ChevronRightIcon, ChevronDown as ChevronDownIcon, Layers, List, Save, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, X, Edit, ChevronRight as ChevronRightIcon, ChevronDown as ChevronDownIcon, Layers, List, Save, Check, Search } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -207,32 +207,31 @@ export function TransactionTable({
     };
 
     return (
-        <div className="space-y-4">
-            <div className="flex flex-wrap gap-2 mb-2">
+        <div className="space-y-6">
+            <div className="flex flex-wrap items-center gap-4 px-1">
                 {categories && categories.length > 0 && (
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8">
-                                Filter Categories {activeCategories.length > 0 && `(${activeCategories.length})`}
+                            <Button variant="outline" size="sm" className="h-10 px-5 rounded-xl border-white/40 bg-white/50 backdrop-blur-sm hover:bg-white hover:border-indigo-200 transition-all font-black text-[10px] uppercase tracking-widest text-slate-500 hover:text-indigo-600 shadow-sm">
+                                <List className="w-3.5 h-3.5 mr-2 text-indigo-500" />
+                                Categories {activeCategories.length > 0 && `(${activeCategories.length})`}
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-56 p-2" align="start">
-                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                                <div className="flex items-center justify-between mb-2 pb-2 border-b">
-                                    <span className="text-xs font-semibold">Filter Category</span>
+                        <PopoverContent className="w-64 p-3 rounded-2xl border-white/40 shadow-2xl backdrop-blur-xl bg-white/90" align="start">
+                            <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                <div className="flex items-center justify-between mb-2 pb-2 border-b border-indigo-50">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Filter Category</span>
                                     {activeCategories.length > 0 && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 text-[10px] uppercase font-bold text-slate-500"
+                                        <button
+                                            className="text-[9px] font-black text-indigo-500 uppercase tracking-widest hover:text-indigo-700 transition-colors"
                                             onClick={() => activeCategories.forEach((cat: string) => onToggleCategory?.(cat))}
                                         >
-                                            Clear
-                                        </Button>
+                                            Reset
+                                        </button>
                                     )}
                                 </div>
                                 {categories.map(cat => (
-                                    <div key={cat} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
+                                    <div key={cat} className="flex items-center space-x-3 px-2 py-2 hover:bg-indigo-50/50 rounded-xl transition-colors cursor-pointer group">
                                         <Checkbox
                                             id={`table-cat-${cat}`}
                                             checked={activeCategories.includes(cat)}
@@ -240,8 +239,9 @@ export function TransactionTable({
                                                 onToggleCategory?.(cat);
                                                 setCurrentPage(1);
                                             }}
+                                            className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                                         />
-                                        <label htmlFor={`table-cat-${cat}`} className="text-sm font-normal cursor-pointer flex-1">
+                                        <label htmlFor={`table-cat-${cat}`} className="text-xs font-black text-slate-600 cursor-pointer flex-1 group-hover:text-indigo-700 transition-colors">
                                             {cat}
                                         </label>
                                     </div>
@@ -254,34 +254,33 @@ export function TransactionTable({
                 {subcategories && subcategories.length > 0 && (
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8">
-                                Filter Subcategories {activeSubcategories.length > 0 && `(${activeSubcategories.length})`}
+                            <Button variant="outline" size="sm" className="h-10 px-5 rounded-xl border-white/40 bg-white/50 backdrop-blur-sm hover:bg-white hover:border-indigo-200 transition-all font-black text-[10px] uppercase tracking-widest text-slate-500 hover:text-indigo-600 shadow-sm">
+                                <Layers className="w-3.5 h-3.5 mr-2 text-indigo-500" />
+                                Segments {activeSubcategories.length > 0 && `(${activeSubcategories.length})`}
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-56 p-2" align="start">
-                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                                <div className="flex items-center justify-between mb-2 pb-2 border-b">
-                                    <span className="text-xs font-semibold">Filter Subcategory</span>
+                        <PopoverContent className="w-64 p-3 rounded-2xl border-white/40 shadow-2xl backdrop-blur-xl bg-white/90" align="start">
+                            <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                <div className="flex items-center justify-between mb-2 pb-2 border-b border-indigo-50">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Filter Segment</span>
                                     {activeSubcategories.length > 0 && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 text-[10px] uppercase font-bold text-slate-500"
+                                        <button
+                                            className="text-[9px] font-black text-indigo-500 uppercase tracking-widest hover:text-indigo-700 transition-colors"
                                             onClick={() => activeSubcategories.forEach((sub: string) => onToggleSubcategory?.(sub))}
                                         >
-                                            Clear
-                                        </Button>
+                                            Reset
+                                        </button>
                                     )}
                                 </div>
                                 {(() => {
                                     const availableSubs = filters?.categories && filters.categories.length > 0
                                         ? Array.from(new Set(filters.categories.flatMap(cat => categoryMapping[cat] || [])))
-                                            .filter(s => subcategories.includes(s))
+                                            .filter(s => subcategories?.includes(s))
                                             .sort()
-                                        : subcategories;
+                                        : subcategories || [];
 
                                     return availableSubs.map(sub => (
-                                        <div key={sub} className="flex items-center space-x-2 px-2 py-1 hover:bg-slate-50 rounded">
+                                        <div key={sub} className="flex items-center space-x-3 px-2 py-2 hover:bg-indigo-50/50 rounded-xl transition-colors cursor-pointer group">
                                             <Checkbox
                                                 id={`table-sub-${sub}`}
                                                 checked={activeSubcategories.includes(sub)}
@@ -289,8 +288,9 @@ export function TransactionTable({
                                                     onToggleSubcategory?.(sub);
                                                     setCurrentPage(1);
                                                 }}
+                                                className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                                             />
-                                            <label htmlFor={`table-sub-${sub}`} className="text-sm font-normal cursor-pointer flex-1">
+                                            <label htmlFor={`table-sub-${sub}`} className="text-xs font-black text-slate-600 cursor-pointer flex-1 group-hover:text-indigo-700 transition-colors">
                                                 {sub}
                                             </label>
                                         </div>
@@ -305,117 +305,117 @@ export function TransactionTable({
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 text-red-500 hover:text-red-700"
+                        className="h-10 px-4 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
                         onClick={() => {
                             activeCategories.forEach((cat: string) => onToggleCategory?.(cat));
                             activeSubcategories.forEach((sub: string) => onToggleSubcategory?.(sub));
                         }}
                     >
-                        Reset All Filters
+                        Reset All
                         <X className="ml-2 h-4 w-4" />
                     </Button>
                 )}
 
-                <div className="ml-auto flex items-center bg-slate-100 p-1 rounded-md border border-slate-200">
+                <div className="ml-auto flex items-center bg-white/40 p-1.5 rounded-2xl border border-white/60 shadow-sm backdrop-blur-sm">
                     <button
                         onClick={() => setIsGrouped(false)}
                         className={cn(
-                            "px-3 py-1 text-xs font-semibold rounded transition-all flex items-center gap-1.5",
-                            !isGrouped ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                            "px-5 h-8 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-2",
+                            !isGrouped ? "bg-white text-indigo-600 shadow-lg shadow-indigo-500/10" : "text-slate-400 hover:text-slate-600"
                         )}
                     >
-                        <List className="w-3 h-3" /> List
+                        <List className="w-3.5 h-3.5" /> List
                     </button>
                     <button
                         onClick={() => setIsGrouped(true)}
                         className={cn(
-                            "px-3 py-1 text-xs font-semibold rounded transition-all flex items-center gap-1.5",
-                            isGrouped ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                            "px-5 h-8 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-2",
+                            isGrouped ? "bg-white text-indigo-600 shadow-lg shadow-indigo-500/10" : "text-slate-400 hover:text-slate-600"
                         )}
                     >
-                        <Layers className="w-3 h-3" /> Grouped
+                        <Layers className="w-3.5 h-3.5" /> Grouped
                     </button>
                 </div>
             </div>
-            <div className="rounded-md border">
+            <div className="rounded-2xl border border-white/40 overflow-hidden shadow-sm bg-white/30 backdrop-blur-sm">
                 <Table>
-                    <TableHeader>
-                        <TableRow>
+                    <TableHeader className="bg-indigo-50/50 border-b border-indigo-100/50">
+                        <TableRow className="hover:bg-transparent border-none">
                             <TableHead
-                                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                                className="cursor-pointer hover:bg-white/60 transition-colors font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 h-auto"
                                 onClick={() => requestSort('parsedDate')}
                             >
-                                <div className="flex items-center">
+                                <div className="flex items-center gap-2">
                                     Date {getSortIcon('parsedDate')}
                                 </div>
                             </TableHead>
                             <TableHead
-                                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                                className="cursor-pointer hover:bg-white/60 transition-colors font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 h-auto"
                                 onClick={() => requestSort('category')}
                             >
-                                <div className="flex items-center">
+                                <div className="flex items-center gap-2">
                                     Category {getSortIcon('category')}
                                 </div>
                             </TableHead>
                             <TableHead
-                                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                                className="cursor-pointer hover:bg-white/60 transition-colors font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 h-auto"
                                 onClick={() => requestSort('subcategory')}
                             >
-                                <div className="flex items-center">
-                                    Subcategory {getSortIcon('subcategory')}
+                                <div className="flex items-center gap-2">
+                                    Segment {getSortIcon('subcategory')}
                                 </div>
                             </TableHead>
                             <TableHead
-                                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                                className="cursor-pointer hover:bg-white/60 transition-colors font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 h-auto"
                                 onClick={() => requestSort('description')}
                             >
-                                <div className="flex items-center">
-                                    Description {getSortIcon('description')}
+                                <div className="flex items-center gap-2">
+                                    Payee / Activity {getSortIcon('description')}
                                 </div>
                             </TableHead>
                             <TableHead
-                                className="text-right cursor-pointer hover:bg-slate-50 transition-colors"
+                                className="text-right cursor-pointer hover:bg-white/60 transition-colors font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 h-auto"
                                 onClick={() => requestSort('absAmount')}
                             >
-                                <div className="flex items-center justify-end">
+                                <div className="flex items-center justify-end gap-2">
                                     Amount {getSortIcon('absAmount')}
                                 </div>
                             </TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead className="text-right font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 h-auto pr-6">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {!isGrouped ? (
                             paginatedExpenses.map((expense, index) => (
-                                <TableRow key={`${expense.rowId}-${index}`}>
-                                    <TableCell className="font-medium">{expense.date}</TableCell>
+                                <TableRow key={`${expense.rowId}-${index}`} className="group hover:bg-white/60 transition-colors border-indigo-50/20">
+                                    <TableCell className="font-black text-xs text-slate-400 tracking-tighter py-4">{expense.date}</TableCell>
                                     <TableCell>
                                         {inlineEditing?.rowId === expense.rowId && inlineEditing?.field === 'category' ? (
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-2">
                                                 <Select
                                                     value={inlineEditing.value}
                                                     onValueChange={(val) => setInlineEditing({ ...inlineEditing, value: val })}
                                                 >
-                                                    <SelectTrigger className="h-8 w-32">
+                                                    <SelectTrigger className="h-9 w-40 rounded-xl border-indigo-100 bg-white shadow-sm font-bold text-xs">
                                                         <SelectValue />
                                                     </SelectTrigger>
-                                                    <SelectContent>
+                                                    <SelectContent className="rounded-xl border-white/40 backdrop-blur-xl bg-white/90">
                                                         {categories?.filter(Boolean).map(cat => (
-                                                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                                            <SelectItem key={cat} value={cat} className="text-xs font-bold">{cat}</SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
-                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600" onClick={handleInlineSave} disabled={isSavingInline}>
+                                                <Button size="icon" variant="ghost" className="h-9 w-9 text-emerald-600 hover:bg-emerald-50 rounded-xl" onClick={handleInlineSave} disabled={isSavingInline}>
                                                     <Check className="h-4 w-4" />
                                                 </Button>
-                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-rose-600" onClick={() => setInlineEditing(null)} disabled={isSavingInline}>
+                                                <Button size="icon" variant="ghost" className="h-9 w-9 text-rose-600 hover:bg-rose-50 rounded-xl" onClick={() => setInlineEditing(null)} disabled={isSavingInline}>
                                                     <X className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         ) : (
                                             <Badge
                                                 variant="outline"
-                                                className="bg-slate-50 font-normal cursor-pointer hover:bg-slate-100"
+                                                className="bg-indigo-50/50 text-indigo-600 border-indigo-100/50 font-black text-[9px] uppercase tracking-widest px-2.5 py-0.5 rounded-full cursor-pointer hover:bg-indigo-500 hover:text-white transition-all shadow-sm"
                                                 onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'category', value: expense.category, originalValue: expense.category })}
                                             >
                                                 {expense.category}
@@ -424,76 +424,60 @@ export function TransactionTable({
                                     </TableCell>
                                     <TableCell>
                                         {inlineEditing?.rowId === expense.rowId && inlineEditing?.field === 'subcategory' ? (
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-2">
                                                 <Select
                                                     value={inlineEditing.value}
                                                     onValueChange={(val) => setInlineEditing({ ...inlineEditing, value: val })}
                                                 >
-                                                    <SelectTrigger className="h-8 w-32">
+                                                    <SelectTrigger className="h-9 w-40 rounded-xl border-indigo-100 bg-white shadow-sm font-bold text-xs">
                                                         <SelectValue />
                                                     </SelectTrigger>
-                                                    <SelectContent>
+                                                    <SelectContent className="rounded-xl border-white/40 backdrop-blur-xl bg-white/90">
                                                         {(() => {
                                                             const availableSubs = expense.category
                                                                 ? (categoryMapping[expense.category] || []).filter(s => subcategories?.includes(s))
                                                                 : subcategories;
                                                             return availableSubs?.filter(Boolean).map(sub => (
-                                                                <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                                                                <SelectItem key={sub} value={sub} className="text-xs font-bold">{sub}</SelectItem>
                                                             ));
                                                         })()}
                                                     </SelectContent>
                                                 </Select>
-                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600" onClick={handleInlineSave} disabled={isSavingInline}>
+                                                <Button size="icon" variant="ghost" className="h-9 w-9 text-emerald-600 hover:bg-emerald-50 rounded-xl" onClick={handleInlineSave} disabled={isSavingInline}>
                                                     <Check className="h-4 w-4" />
                                                 </Button>
-                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-rose-600" onClick={() => setInlineEditing(null)} disabled={isSavingInline}>
+                                                <Button size="icon" variant="ghost" className="h-9 w-9 text-rose-600 hover:bg-rose-50 rounded-xl" onClick={() => setInlineEditing(null)} disabled={isSavingInline}>
                                                     <X className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         ) : (
                                             <span
-                                                className="text-slate-600 font-medium cursor-pointer hover:underline hover:text-slate-900 transition-colors"
+                                                className="text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-colors"
                                                 onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'subcategory', value: expense.subcategory, originalValue: expense.subcategory })}
                                             >
-                                                {expense.subcategory}
+                                                {expense.subcategory || '---'}
                                             </span>
                                         )}
                                     </TableCell>
-                                    <TableCell className="max-w-[250px]">
-                                        {inlineEditing?.rowId === expense.rowId && inlineEditing?.field === 'description' ? (
-                                            <div className="flex items-center gap-1">
-                                                <Input
-                                                    className="h-8"
-                                                    value={inlineEditing.value}
-                                                    onChange={(e) => setInlineEditing({ ...inlineEditing, value: e.target.value })}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') handleInlineSave();
-                                                        if (e.key === 'Escape') setInlineEditing(null);
-                                                    }}
-                                                    autoFocus
-                                                />
-                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600" onClick={handleInlineSave} disabled={isSavingInline}>
-                                                    <Check className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        ) : (
-                                            <div
-                                                className="truncate cursor-pointer hover:bg-slate-50 p-1 rounded transition-colors"
-                                                onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'description', value: expense.description, originalValue: expense.description })}
-                                            >
-                                                {expense.description}
-                                            </div>
-                                        )}
-                                    </TableCell>
-                                    <TableCell className={`text-right font-semibold ${expense.amount > 0 ? 'text-emerald-600' : 'text-foreground'}`}>
-                                        {expense.amount > 0 ? '+' : ''}
-                                        {expense.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                                    <TableCell>
+                                        <span className="text-sm font-black text-slate-800 tracking-tight block max-w-xs truncate group-hover:text-indigo-900 transition-colors">
+                                            {expense.description}
+                                        </span>
                                     </TableCell>
                                     <TableCell className="text-right">
+                                        <span className={cn(
+                                            "text-sm font-black tracking-tight",
+                                            expense.amount > 0 ? "text-emerald-600" : "text-indigo-600"
+                                        )}>
+                                            {expense.amount > 0 ? '+' : ''}
+                                            {expense.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-right pr-6">
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 text-slate-400 hover:text-blue-600"
+                                            className="h-9 w-9 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all shadow-sm active:scale-95"
                                             onClick={() => setEditingExpense(expense)}
                                         >
                                             <Edit className="h-4 w-4" />
@@ -504,37 +488,42 @@ export function TransactionTable({
                         ) : (
                             hierarchicalData.map((catGroup) => (
                                 <React.Fragment key={catGroup.category}>
-                                    <TableRow className="bg-slate-50/80 hover:bg-slate-100 group transition-colors select-none">
-                                        <TableCell colSpan={6} className="py-2.5">
+                                    <TableRow className="bg-indigo-50/30 hover:bg-indigo-50/50 group transition-colors select-none border-indigo-100/30">
+                                        <TableCell colSpan={6} className="py-3 px-4">
                                             <div className="flex items-center justify-between w-full">
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-4">
                                                     <button
                                                         onClick={() => toggleCategoryExpand(catGroup.category)}
-                                                        className="p-1 hover:bg-slate-200 rounded transition-colors"
+                                                        className="p-1.5 hover:bg-white rounded-lg transition-all shadow-sm active:scale-95 bg-white/50"
                                                     >
                                                         {expandedCategories.has(catGroup.category) ? (
-                                                            <ChevronDownIcon className="w-4 h-4 text-slate-500" />
+                                                            <ChevronDownIcon className="w-4 h-4 text-indigo-500" />
                                                         ) : (
-                                                            <ChevronRightIcon className="w-4 h-4 text-slate-500" />
+                                                            <ChevronRightIcon className="w-4 h-4 text-slate-400" />
                                                         )}
                                                     </button>
-                                                    <span
-                                                        className="font-bold text-slate-800 cursor-pointer"
-                                                        onClick={() => toggleCategoryExpand(catGroup.category)}
-                                                    >
-                                                        {catGroup.category}
-                                                    </span>
-                                                    <Badge variant="secondary" className="text-[10px] font-normal h-4 px-1">
-                                                        {catGroup.count} txs
-                                                    </Badge>
+                                                    <div className="flex flex-col">
+                                                        <div className="flex items-center gap-2">
+                                                            <span
+                                                                className="font-black text-slate-900 cursor-pointer hover:text-indigo-600 transition-colors"
+                                                                onClick={() => toggleCategoryExpand(catGroup.category)}
+                                                            >
+                                                                {catGroup.category}
+                                                            </span>
+                                                            <div className="w-1 h-1 rounded-full bg-indigo-500/40" />
+                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                                                {catGroup.count} Records
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-xs text-slate-600 font-bold uppercase tracking-tight">Group Total:</span>
+                                                <div className="flex items-center gap-4">
+                                                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest opacity-60">Total</span>
                                                     <span className={cn(
-                                                        "font-black text-sm",
-                                                        catGroup.total > 0 ? "text-emerald-600" : "text-slate-900"
+                                                        "font-black text-sm tracking-tight px-3 py-1 rounded-lg bg-white/50 border border-white/60 shadow-sm",
+                                                        catGroup.total > 0 ? "text-emerald-600" : "text-indigo-600"
                                                     )}>
-                                                        {catGroup.total.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                                                        {catGroup.total.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
                                                     </span>
                                                 </div>
                                             </div>
@@ -545,149 +534,68 @@ export function TransactionTable({
                                         const isExpanded = expandedSubcategories.has(subKey);
                                         return (
                                             <React.Fragment key={subKey}>
-                                                <TableRow className="bg-white hover:bg-slate-50/50 group transition-colors select-none">
-                                                    <TableCell colSpan={6} className="py-2 pl-8 border-l-2 border-slate-100">
+                                                <TableRow className="bg-white/40 hover:bg-white/60 group transition-colors select-none border-indigo-50/10">
+                                                    <TableCell colSpan={6} className="py-2.5 pl-12">
                                                         <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-2">
+                                                            <div className="flex items-center gap-3">
                                                                 <button
                                                                     onClick={() => toggleSubExpand(subKey)}
-                                                                    className="p-1 hover:bg-slate-200 rounded transition-colors"
+                                                                    className="p-1 hover:bg-white rounded-md transition-all active:scale-95"
                                                                 >
                                                                     {isExpanded ? (
-                                                                        <ChevronDownIcon className="w-3.5 h-3.5 text-slate-400" />
+                                                                        <ChevronDownIcon className="w-3.5 h-3.5 text-indigo-400" />
                                                                     ) : (
-                                                                        <ChevronRightIcon className="w-3.5 h-3.5 text-slate-400" />
+                                                                        <ChevronRightIcon className="w-3.5 h-3.5 text-slate-300" />
                                                                     )}
                                                                 </button>
                                                                 <span
-                                                                    className="font-semibold text-slate-600 text-sm cursor-pointer"
+                                                                    className="text-xs font-black text-slate-600 uppercase tracking-wider cursor-pointer hover:text-indigo-600"
                                                                     onClick={() => toggleSubExpand(subKey)}
                                                                 >
                                                                     {sub.name}
                                                                 </span>
-                                                                <span className="text-[11px] font-bold text-slate-500">
-                                                                    ({sub.count})
+                                                                <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] italic">
+                                                                    ({sub.count} Transactions)
                                                                 </span>
                                                             </div>
-                                                            <div className="flex items-center gap-2 pr-2">
+                                                            <div className="pr-4">
                                                                 <span className={cn(
-                                                                    "text-sm font-semibold",
-                                                                    sub.total > 0 ? "text-emerald-500" : "text-slate-500"
+                                                                    "text-xs font-black tracking-tight",
+                                                                    sub.total > 0 ? "text-emerald-500" : "text-indigo-500"
                                                                 )}>
-                                                                    {sub.total.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                                                                    {sub.total.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
                                                                 </span>
                                                             </div>
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
                                                 {isExpanded && sub.transactions.map((expense: Expense, txIdx: number) => (
-                                                    <TableRow key={`${expense.rowId}-${txIdx}`} className="bg-slate-50/10 hover:bg-slate-50 transition-colors">
-                                                        <TableCell className="pl-14 text-xs text-slate-500">{expense.date}</TableCell>
-                                                        <TableCell className="pl-14">
-                                                            {inlineEditing?.rowId === expense.rowId && inlineEditing?.field === 'category' ? (
-                                                                <div className="flex items-center gap-1">
-                                                                    <Select
-                                                                        value={inlineEditing.value}
-                                                                        onValueChange={(val) => setInlineEditing({ ...inlineEditing, value: val })}
-                                                                    >
-                                                                        <SelectTrigger className="h-6 w-28 text-[10px]">
-                                                                            <SelectValue />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            {categories?.filter(Boolean).map(cat => (
-                                                                                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-emerald-600" onClick={handleInlineSave} disabled={isSavingInline}>
-                                                                        <Check className="h-3 w-3" />
-                                                                    </Button>
-                                                                </div>
-                                                            ) : (
-                                                                <Badge
-                                                                    variant="outline"
-                                                                    className="text-[10px] font-normal opacity-60 cursor-pointer hover:bg-slate-50"
-                                                                    onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'category', value: expense.category, originalValue: expense.category })}
-                                                                >
-                                                                    {expense.category}
-                                                                </Badge>
-                                                            )}
+                                                    <TableRow key={`${expense.rowId}-${txIdx}`} className="bg-white/10 hover:bg-white/30 transition-colors border-indigo-50/5">
+                                                        <TableCell className="pl-20 py-3 text-[10px] font-black text-slate-400 tracking-tighter opacity-60">
+                                                            {expense.date}
                                                         </TableCell>
-                                                        <TableCell className="text-[10px] text-slate-400 italic">
-                                                            {inlineEditing?.rowId === expense.rowId && inlineEditing?.field === 'subcategory' ? (
-                                                                <div className="flex items-center gap-1">
-                                                                    <Select
-                                                                        value={inlineEditing.value}
-                                                                        onValueChange={(val) => setInlineEditing({ ...inlineEditing, value: val })}
-                                                                    >
-                                                                        <SelectTrigger className="h-6 w-28 text-[10px]">
-                                                                            <SelectValue />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            {(() => {
-                                                                                const availableSubs = expense.category
-                                                                                    ? (categoryMapping[expense.category] || []).filter(s => subcategories?.includes(s))
-                                                                                    : subcategories;
-                                                                                return availableSubs?.filter(Boolean).map(sub => (
-                                                                                    <SelectItem key={sub} value={sub}>{sub}</SelectItem>
-                                                                                ));
-                                                                            })()}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-emerald-600" onClick={handleInlineSave} disabled={isSavingInline}>
-                                                                        <Check className="h-3 w-3" />
-                                                                    </Button>
-                                                                </div>
-                                                            ) : (
-                                                                <span
-                                                                    className="cursor-pointer hover:underline"
-                                                                    onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'subcategory', value: expense.subcategory, originalValue: expense.subcategory })}
-                                                                >
-                                                                    {expense.subcategory}
-                                                                </span>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell className="max-w-[200px] truncate text-xs">
-                                                            {inlineEditing?.rowId === expense.rowId && inlineEditing?.field === 'description' ? (
-                                                                <div className="flex items-center gap-1">
-                                                                    <Input
-                                                                        className="h-6 text-xs"
-                                                                        value={inlineEditing.value}
-                                                                        onChange={(e) => setInlineEditing({ ...inlineEditing, value: e.target.value })}
-                                                                        onKeyDown={(e) => {
-                                                                            if (e.key === 'Enter') handleInlineSave();
-                                                                            if (e.key === 'Escape') setInlineEditing(null);
-                                                                        }}
-                                                                        autoFocus
-                                                                    />
-                                                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-emerald-600" onClick={handleInlineSave} disabled={isSavingInline}>
-                                                                        <Check className="h-3 w-3" />
-                                                                    </Button>
-                                                                </div>
-                                                            ) : (
-                                                                <div
-                                                                    className="cursor-pointer hover:bg-slate-50 p-0.5 rounded"
-                                                                    onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'description', value: expense.description, originalValue: expense.description })}
-                                                                >
-                                                                    {expense.description}
-                                                                </div>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell className={cn(
-                                                            "text-right text-xs font-medium",
-                                                            expense.amount > 0 ? 'text-emerald-600' : 'text-slate-600'
-                                                        )}>
-                                                            {expense.amount > 0 ? '+' : ''}
-                                                            {expense.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                                                        <TableCell colSpan={2} className="pl-4">
+                                                            <span className="text-xs font-black text-slate-700 tracking-tight">
+                                                                {expense.description}
+                                                            </span>
                                                         </TableCell>
                                                         <TableCell className="text-right">
+                                                            <span className={cn(
+                                                                "text-[11px] font-black tracking-tight",
+                                                                expense.amount > 0 ? "text-emerald-500" : "text-indigo-500"
+                                                            )}>
+                                                                {expense.amount > 0 ? '+' : ''}
+                                                                {expense.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell className="text-right pr-6">
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-6 w-6 text-slate-300 hover:text-blue-500"
+                                                                className="h-7 w-7 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-lg transition-all"
                                                                 onClick={() => setEditingExpense(expense)}
                                                             >
-                                                                <Edit className="h-3 h-3" />
+                                                                <Edit className="h-3.5 w-3.5" />
                                                             </Button>
                                                         </TableCell>
                                                     </TableRow>
@@ -700,8 +608,14 @@ export function TransactionTable({
                         )}
                         {(!isGrouped ? paginatedExpenses.length : hierarchicalData.length) === 0 && (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center">
-                                    No transactions found.
+                                <TableCell colSpan={6} className="h-48 text-center bg-white/10">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 mb-2">
+                                            <Search className="w-6 h-6 text-slate-300" />
+                                        </div>
+                                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">No transactions found</span>
+                                        <span className="text-[10px] text-slate-300 italic">Try adjusting your filters or search terms</span>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )}
@@ -710,29 +624,33 @@ export function TransactionTable({
             </div>
 
             {!isGrouped && (
-                <div className="flex items-center justify-between px-2">
-                    <p className="text-sm font-bold text-slate-600">
-                        Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, sortedExpenses.length)} of {sortedExpenses.length} transactions
-                    </p>
-                    <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-between px-2 pt-2">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic opacity-60">
+                        Showing <span className="text-indigo-500 opacity-100">{startIndex + 1}</span> to <span className="text-indigo-500 opacity-100">{Math.min(startIndex + itemsPerPage, sortedExpenses.length)}</span> of <span className="text-indigo-500 opacity-100">{sortedExpenses.length}</span> Records
+                    </div>
+                    <div className="flex items-center gap-3">
                         <Button
                             variant="outline"
                             size="sm"
+                            className="h-9 px-4 rounded-xl border-white/40 bg-white/50 font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-white hover:text-indigo-600 transition-all shadow-sm active:scale-95 disabled:opacity-30"
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
                         >
-                            <ChevronLeft className="h-4 w-4" />
+                            <ChevronLeft className="h-4 w-4 mr-1" /> Prev
                         </Button>
-                        <div className="text-sm font-medium">
-                            Page {currentPage} of {totalPages || 1}
+                        <div className="bg-white/40 px-3 py-1.5 rounded-xl border border-white/60 shadow-sm backdrop-blur-sm">
+                            <span className="text-xs font-black text-indigo-600">{currentPage}</span>
+                            <span className="text-[10px] font-black text-slate-300 mx-1.5 uppercase tracking-widest">of</span>
+                            <span className="text-xs font-black text-slate-600">{totalPages || 1}</span>
                         </div>
                         <Button
                             variant="outline"
                             size="sm"
+                            className="h-9 px-4 rounded-xl border-white/40 bg-white/50 font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-white hover:text-indigo-600 transition-all shadow-sm active:scale-95 disabled:opacity-30"
                             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages || totalPages === 0}
                         >
-                            <ChevronRight className="h-4 w-4" />
+                            Next <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                     </div>
                 </div>
@@ -747,6 +665,6 @@ export function TransactionTable({
                 subcategories={subcategories || []}
                 categoryMapping={categoryMapping}
             />
-        </div>
+        </div >
     );
 }

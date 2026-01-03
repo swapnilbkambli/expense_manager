@@ -21,20 +21,22 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
         return (
-            <div className="bg-white p-3 border border-slate-200 shadow-xl rounded-lg">
-                <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1">{label}</p>
-                <div className="space-y-1">
-                    <p className="text-sm font-bold flex justify-between gap-4">
-                        <span className="text-slate-600">Savings Rate:</span>
+            <div className="bg-white/90 backdrop-blur-xl p-4 border border-white/40 shadow-2xl rounded-2xl">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">{label}</p>
+                <div className="space-y-2">
+                    <p className="text-sm font-black flex justify-between gap-6">
+                        <span className="text-slate-500 uppercase tracking-tighter text-[11px]">Savings Rate:</span>
                         <span className={data.savingsRate >= 0 ? "text-emerald-600" : "text-rose-600"}>
                             {data.savingsRate}%
                         </span>
                     </p>
-                    <p className="text-[11px] text-slate-500 font-medium">
-                        Income: ₹{data.income.toLocaleString('en-IN')}
+                    <p className="text-xs font-bold text-slate-700 flex justify-between">
+                        <span className="opacity-60">Income:</span>
+                        <span>₹{data.income.toLocaleString('en-IN')}</span>
                     </p>
-                    <p className="text-[11px] text-slate-500 font-medium">
-                        Consumption: ₹{data.consumption.toLocaleString('en-IN')}
+                    <p className="text-xs font-bold text-slate-700 flex justify-between">
+                        <span className="opacity-60">Consumption:</span>
+                        <span>₹{data.consumption.toLocaleString('en-IN')}</span>
                     </p>
                 </div>
             </div>
@@ -48,16 +50,17 @@ export default function SavingsRateTrend({ data }: SavingsRateTrendProps) {
     const displayData = data.slice(-24);
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md h-full flex flex-col">
-            <div className="flex items-center justify-between mb-6">
+        <div className="bg-white/40 backdrop-blur-md p-8 rounded-3xl border border-white/40 shadow-2xl shadow-indigo-500/5 transition-all hover:bg-white/50 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h3 className="text-lg font-black text-slate-900 tracking-tight">Savings Rate Trend</h3>
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                        Monthly (Income - Expenses) / Income
+                    <h3 className="text-xl font-black text-slate-900 tracking-tight">Savings Velocity</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1.5 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        Monthly Margin Trends
                     </p>
                 </div>
-                <div className="px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100">
-                    <span className="text-[10px] font-black text-emerald-700 uppercase">Target: 30%+</span>
+                <div className="px-4 py-1.5 bg-emerald-500 text-white rounded-full shadow-lg shadow-emerald-100 flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest">Bench: 30%+</span>
                 </div>
             </div>
 
@@ -66,35 +69,35 @@ export default function SavingsRateTrend({ data }: SavingsRateTrendProps) {
                     <AreaChart data={displayData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <defs>
                             <linearGradient id="colorSavings" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
+                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
                                 <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.5} />
                         <XAxis
                             dataKey="month"
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }}
-                            dy={10}
+                            tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 900 }}
+                            dy={15}
                         />
                         <YAxis
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }}
+                            tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 900 }}
                             tickFormatter={(value) => `${value}%`}
                         />
-                        <Tooltip content={<CustomTooltip />} />
-                        <ReferenceLine y={0} stroke="#cbd5e1" strokeWidth={1} />
-                        <ReferenceLine y={30} stroke="#10b981" strokeDasharray="5 5" strokeWidth={1} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#cbd5e1', strokeWidth: 2, strokeDasharray: '5 5' }} />
+                        <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={2} strokeOpacity={0.5} />
+                        <ReferenceLine y={30} stroke="#10b981" strokeDasharray="8 4" strokeWidth={2} label={{ value: 'BENCHMARK', position: 'right', fill: '#10b981', fontSize: 9, fontWeight: 900, dy: -10 }} />
                         <Area
                             type="monotone"
                             dataKey="savingsRate"
                             stroke="#10b981"
-                            strokeWidth={3}
+                            strokeWidth={4}
                             fillOpacity={1}
                             fill="url(#colorSavings)"
-                            animationDuration={1500}
+                            animationDuration={2000}
                         />
                     </AreaChart>
                 </ResponsiveContainer>

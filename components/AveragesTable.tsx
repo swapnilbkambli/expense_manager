@@ -113,50 +113,50 @@ export function AveragesTable({ expenses, onToggleCategory, onToggleSubcategory,
     if (hierarchicalData.length === 0) return null;
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="space-y-6">
+            <div className="flex items-center justify-between gap-6 px-1">
+                <div className="relative flex-1 group">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                     <Input
-                        placeholder="Filter averages..."
+                        placeholder="Filter benchmarks..."
                         value={localSearch}
                         onChange={(e) => setLocalSearch(e.target.value)}
-                        className="pl-9 h-9"
+                        className="pl-10 h-10 bg-white/50 border-white/40 focus:border-indigo-500/50 focus:ring-indigo-500/20 rounded-xl transition-all font-bold text-sm"
                     />
                 </div>
-                <div className="flex items-center gap-3 pr-1">
+                <div className="flex items-center gap-4">
                     <button
-                        className="text-[11px] uppercase font-bold text-blue-600 hover:text-blue-800 transition-colors whitespace-nowrap"
+                        className="text-[10px] uppercase font-black text-indigo-500 hover:text-indigo-700 transition-colors whitespace-nowrap tracking-[0.1em]"
                         onClick={() => {
                             const cats = filteredData.map(d => d.category);
                             onSelectCategories?.(cats, true);
                         }}
                     >
-                        Select All
+                        Focus All
                     </button>
-                    <div className="w-[1px] h-3 bg-slate-200" />
+                    <div className="w-[1px] h-4 bg-slate-200/50" />
                     <button
-                        className="text-[11px] uppercase font-bold text-slate-500 hover:text-slate-700 transition-colors whitespace-nowrap"
+                        className="text-[10px] uppercase font-black text-slate-400 hover:text-slate-600 transition-colors whitespace-nowrap tracking-[0.1em]"
                         onClick={() => {
                             const cats = filteredData.map(d => d.category);
                             onSelectCategories?.(cats, false);
                         }}
                     >
-                        Clear All
+                        Reset Selection
                     </button>
                 </div>
             </div>
 
-            <div className="rounded-md border overflow-hidden">
+            <div className="rounded-2xl border border-white/40 overflow-hidden shadow-sm bg-white/30 backdrop-blur-sm">
                 <Table>
-                    <TableHeader className="bg-slate-50">
-                        <TableRow>
-                            <TableHead className="w-[40px]"></TableHead>
-                            <TableHead className="font-semibold">Category</TableHead>
-                            <TableHead className="font-semibold">Subcategory</TableHead>
-                            <TableHead className="text-right font-semibold">Monthly Avg</TableHead>
-                            <TableHead className="text-right font-semibold">Total Period</TableHead>
-                            <TableHead className="text-right font-semibold whitespace-nowrap">TXs</TableHead>
+                    <TableHeader className="bg-indigo-50/50 border-b border-indigo-100/50">
+                        <TableRow className="hover:bg-transparent border-none">
+                            <TableHead className="w-[50px]"></TableHead>
+                            <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">Category</TableHead>
+                            <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">Breakdown</TableHead>
+                            <TableHead className="text-right font-black text-[10px] uppercase tracking-widest text-slate-500">Monthly Target</TableHead>
+                            <TableHead className="text-right font-black text-[10px] uppercase tracking-widest text-slate-500">Period Total</TableHead>
+                            <TableHead className="text-right font-black text-[10px] uppercase tracking-widest text-slate-500 px-6">Count</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -168,48 +168,59 @@ export function AveragesTable({ expenses, onToggleCategory, onToggleSubcategory,
                                 <React.Fragment key={categoryRow.category}>
                                     <TableRow
                                         className={cn(
-                                            "hover:bg-slate-50 transition-colors",
-                                            categoryActive && "bg-blue-50/40"
+                                            "hover:bg-white/60 transition-colors border-indigo-50/50",
+                                            categoryActive && "bg-indigo-500/10"
                                         )}
                                     >
-                                        <TableCell>
+                                        <TableCell className="pl-6">
                                             <Checkbox
                                                 checked={categoryActive}
                                                 onCheckedChange={() => onToggleCategory?.(categoryRow.category)}
+                                                className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                                             />
                                         </TableCell>
-                                        <TableCell colSpan={2} className="font-bold text-slate-900 py-3">
-                                            <div className="flex items-center gap-2">
+                                        <TableCell colSpan={2} className="py-4">
+                                            <div className="flex items-center gap-3">
                                                 <button
                                                     onClick={() => toggleExpand(categoryRow.category)}
-                                                    className="p-0.5 hover:bg-slate-200 rounded transition-colors"
+                                                    className="p-1.5 hover:bg-white rounded-lg transition-all shadow-sm active:scale-95"
                                                 >
                                                     {isExpanded ? (
-                                                        <ChevronDown className="w-4 h-4 text-slate-500" />
+                                                        <ChevronDown className="w-4 h-4 text-indigo-500" />
                                                     ) : (
-                                                        <ChevronRight className="w-4 h-4 text-slate-500" />
+                                                        <ChevronRight className="w-4 h-4 text-slate-400" />
                                                     )}
                                                 </button>
-                                                <span
-                                                    className="cursor-pointer hover:underline"
-                                                    onClick={() => onToggleCategory?.(categoryRow.category)}
-                                                >
-                                                    {categoryRow.category}
-                                                </span>
-                                                <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full font-normal">
-                                                    {categoryRow.subcategories.length} subs
-                                                </span>
+                                                <div className="flex flex-col">
+                                                    <span
+                                                        className="font-black text-slate-900 cursor-pointer hover:text-indigo-600 transition-colors tracking-tight text-sm"
+                                                        onClick={() => onToggleCategory?.(categoryRow.category)}
+                                                    >
+                                                        {categoryRow.category}
+                                                    </span>
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
+                                                        <span className="w-1 h-1 rounded-full bg-indigo-400 opacity-40" />
+                                                        {categoryRow.subcategories.length} Segments
+                                                    </span>
+                                                </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-right font-bold text-blue-700">
-                                            <span className={cn(viewMode === 'income' && "text-emerald-600")}>
+                                        <TableCell className="text-right">
+                                            <span className={cn(
+                                                "font-black text-sm tracking-tight",
+                                                viewMode === 'income' ? "text-emerald-600" : "text-indigo-600"
+                                            )}>
                                                 {formatCurrency(categoryRow.avg)}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-right text-slate-600 font-medium">
-                                            {formatCurrency(categoryRow.total)}
+                                        <TableCell className="text-right">
+                                            <span className="text-sm font-bold text-slate-600 tracking-tight">
+                                                {formatCurrency(categoryRow.total)}
+                                            </span>
                                         </TableCell>
-                                        <TableCell className="text-right text-slate-400 text-xs">{categoryRow.count}</TableCell>
+                                        <TableCell className="text-right px-6">
+                                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{categoryRow.count}</span>
+                                        </TableCell>
                                     </TableRow>
 
                                     {isExpanded && categoryRow.subcategories.map((sub, subIndex) => {
@@ -218,34 +229,44 @@ export function AveragesTable({ expenses, onToggleCategory, onToggleSubcategory,
                                             <TableRow
                                                 key={`${categoryRow.category}-${sub.subcategory}`}
                                                 className={cn(
-                                                    "bg-slate-50/30 hover:bg-slate-50 transition-colors",
-                                                    subActive && "bg-blue-50/20"
+                                                    "bg-white/20 hover:bg-white/40 transition-colors border-indigo-50/20",
+                                                    subActive && "bg-indigo-500/5"
                                                 )}
                                             >
-                                                <TableCell className="pl-8">
+                                                <TableCell className="pl-12">
                                                     <Checkbox
                                                         checked={subActive}
                                                         onCheckedChange={() => onToggleSubcategory?.(sub.subcategory)}
+                                                        className="border-slate-300 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500"
                                                     />
                                                 </TableCell>
-                                                <TableCell className="pl-4 text-slate-400 text-xs w-[40px]">
-                                                    └─
+                                                <TableCell className="w-[50px] p-0 text-center">
+                                                    <span className="text-indigo-200 font-bold opacity-30 tracking-tighter">└─</span>
                                                 </TableCell>
-                                                <TableCell className="text-slate-600 font-medium translate-x-[-15px]">
+                                                <TableCell className="py-3">
                                                     <span
-                                                        className="cursor-pointer hover:underline"
+                                                        className="cursor-pointer hover:text-indigo-600 text-slate-600 font-black text-xs uppercase tracking-wider transition-colors"
                                                         onClick={() => onToggleSubcategory?.(sub.subcategory)}
                                                     >
                                                         {sub.subcategory}
                                                     </span>
                                                 </TableCell>
-                                                <TableCell className="text-right text-blue-500 font-semibold">
-                                                    <span className={cn(viewMode === 'income' && "text-emerald-500")}>
+                                                <TableCell className="text-right">
+                                                    <span className={cn(
+                                                        "font-black text-xs tracking-tight",
+                                                        viewMode === 'income' ? "text-emerald-500" : "text-indigo-500"
+                                                    )}>
                                                         {formatCurrency(sub.avg)}
                                                     </span>
                                                 </TableCell>
-                                                <TableCell className="text-right text-slate-500 text-sm">{formatCurrency(sub.total)}</TableCell>
-                                                <TableCell className="text-right text-slate-300 text-[10px]">{sub.count}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <span className="text-xs font-black text-slate-400 tracking-tight">
+                                                        {formatCurrency(sub.total)}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="text-right px-6">
+                                                    <span className="text-[9px] font-black text-slate-200 tracking-[0.2em]">{sub.count}</span>
+                                                </TableCell>
                                             </TableRow>
                                         );
                                     })}
@@ -255,8 +276,8 @@ export function AveragesTable({ expenses, onToggleCategory, onToggleSubcategory,
                     </TableBody>
                 </Table>
             </div>
-            <p className="text-xs text-muted-foreground italic px-1">
-                * Monthly average calculated based on aggregated spend across the selected time range.
+            <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] italic px-2 opacity-60">
+                * Benchmarks calculated over the selected active time window
             </p>
         </div>
     );

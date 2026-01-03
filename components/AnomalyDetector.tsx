@@ -37,23 +37,24 @@ export default function AnomalyDetector({ anomalies, onRefresh }: AnomalyDetecto
     }
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-rose-100 shadow-sm transition-all hover:shadow-md relative overflow-hidden h-full flex flex-col">
-            <div className="flex items-center justify-between mb-6 relative z-10">
+        <div className="bg-white/40 backdrop-blur-md p-8 rounded-3xl border border-white/40 shadow-2xl shadow-indigo-500/5 transition-all hover:bg-white/50 h-full flex flex-col relative overflow-hidden">
+            <div className="flex items-center justify-between mb-8 relative z-10">
                 <div>
-                    <h3 className="text-lg font-black text-slate-900 tracking-tight">Spending Anomalies</h3>
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                    <h3 className="text-xl font-black text-slate-900 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-rose-700 to-rose-500">Anomaly Radar</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1.5 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)] animate-pulse" />
                         Significant Outliers Detected
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                     <button
                         onClick={handleIgnoreAll}
-                        className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-700 transition-colors"
+                        className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-rose-600 transition-colors"
                     >
-                        Ignore All
+                        Clear Issues
                     </button>
-                    <div className="w-8 h-8 bg-rose-50 rounded-lg flex items-center justify-center border border-rose-100 animate-pulse">
-                        <AlertCircle className="w-4 h-4 text-rose-600" />
+                    <div className="w-10 h-10 bg-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-100 group-hover:scale-110 transition-transform">
+                        <AlertCircle className="w-5 h-5 text-white animate-pulse" />
                     </div>
                 </div>
             </div>
@@ -65,53 +66,53 @@ export default function AnomalyDetector({ anomalies, onRefresh }: AnomalyDetecto
                     return (
                         <div
                             key={idx}
-                            className="flex flex-col p-4 bg-rose-50/50 rounded-xl border border-rose-100 hover:bg-rose-50 transition-all border-l-4 border-l-rose-500"
+                            className="group flex flex-col p-5 bg-white/50 backdrop-blur-sm rounded-2xl border border-white/60 hover:border-rose-200/50 hover:bg-white hover:shadow-xl hover:shadow-rose-500/5 transition-all duration-300 overflow-hidden relative border-l-4 border-l-rose-500"
                         >
                             <div className="flex items-start justify-between">
                                 <div className="flex-1 min-w-0 pr-4">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-[9px] font-black px-1.5 py-0.5 bg-rose-100 text-rose-700 rounded uppercase">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-[8px] font-black px-2 py-0.5 bg-rose-500 text-white rounded-full uppercase tracking-widest shadow-sm">
                                             {anomaly.category}
                                         </span>
                                         {anomaly.subcategory && (
-                                            <span className="text-[9px] font-bold text-slate-400 uppercase">
+                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
                                                 {anomaly.subcategory}
                                             </span>
                                         )}
-                                        <span className="text-[10px] font-bold text-slate-300 ml-auto">{anomaly.date}</span>
+                                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest ml-auto">{anomaly.date}</span>
                                     </div>
-                                    <p className="text-sm font-black text-slate-900 truncate">
+                                    <p className="text-sm font-black text-slate-900 truncate group-hover:text-rose-600 transition-colors">
                                         {anomaly.description}
                                     </p>
                                 </div>
-                                <div className="text-right flex flex-col items-end gap-2">
+                                <div className="text-right flex flex-col items-end gap-3">
                                     <div>
-                                        <p className="text-lg font-black text-rose-600">
+                                        <p className="text-xl font-black text-rose-600 tracking-tight">
                                             ₹{Math.abs(anomaly.amount).toLocaleString('en-IN')}
                                         </p>
-                                        <div className="flex items-center justify-end gap-1 text-[10px] font-black text-rose-500 uppercase">
-                                            <TrendingUp className="w-3 h-3" />
-                                            {deviation}x Avg
+                                        <div className="flex items-center justify-end gap-1.5 text-[9px] font-black text-rose-500 uppercase tracking-widest mt-1">
+                                            <TrendingUp className="w-3.5 h-3.5" />
+                                            {deviation}x Typical Spend
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => handleIgnore(anomaly.rowId)}
-                                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-white rounded-md transition-all flex items-center gap-1 border border-transparent hover:border-rose-100"
+                                        className="p-2 h-8 px-3 bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white rounded-xl transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
                                         title="Ignore this anomaly"
                                     >
                                         <EyeOff className="w-3.5 h-3.5" />
-                                        <span className="text-[9px] font-black uppercase">Ignore</span>
+                                        <span className="text-[9px] font-black uppercase tracking-wider">Dismiss</span>
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="mt-3 flex items-center justify-between text-[11px] font-bold text-slate-500 border-t border-rose-100/50 pt-2">
-                                <span>Typical: ₹{anomaly.avgForCategory.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+                            <div className="mt-4 flex items-center justify-between text-[9px] font-black text-slate-400 border-t border-rose-50/50 pt-4 uppercase tracking-widest">
+                                <span className="opacity-60">Avg for Category: <span className="text-slate-600">₹{anomaly.avgForCategory.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span></span>
                                 <button
                                     onClick={() => setSelectedAnomaly(anomaly)}
-                                    className="flex items-center gap-1 text-rose-600 hover:underline font-bold"
+                                    className="flex items-center gap-1.5 text-rose-600 hover:text-rose-700 transition-colors"
                                 >
-                                    View Details <ArrowUpRight className="w-3 h-3" />
+                                    Deep Dive <ArrowUpRight className="w-3.5 h-3.5" />
                                 </button>
                             </div>
                         </div>
@@ -120,7 +121,7 @@ export default function AnomalyDetector({ anomalies, onRefresh }: AnomalyDetecto
             </div>
 
             {/* Subtle background warning sign */}
-            <div className="absolute -left-8 -bottom-8 opacity-[0.03] pointer-events-none">
+            <div className="absolute -left-10 -bottom-10 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-1000 -rotate-12 pointer-events-none">
                 <AlertCircle className="w-48 h-48 text-rose-900" />
             </div>
 

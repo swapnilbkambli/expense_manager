@@ -11,10 +11,10 @@ interface SankeyFlowProps {
 
 const COLORS = {
     income: '#10b981', // emerald-500
-    savings: '#3b82f6', // blue-500
+    savings: '#8b5cf6', // violet-500
     category: '#6366f1', // indigo-500
     subcategory: '#94a3b8', // slate-400
-    link: '#cbd5e1',
+    link: '#e2e8f0',
 };
 
 export function SankeyFlow({ expenses }: SankeyFlowProps) {
@@ -43,7 +43,7 @@ export function SankeyFlow({ expenses }: SankeyFlowProps) {
 
         // Add Savings Node as a "Category" of sorts for the flow
         if (savingsValue > 0) {
-            nodes.push({ name: 'Net Savings', color: COLORS.savings });
+            nodes.push({ name: 'Financial Surplus', color: COLORS.savings });
             const savingsIdx = nodes.length - 1;
             links.push({ source: incomeIdx, target: savingsIdx, value: savingsValue });
         }
@@ -103,17 +103,19 @@ export function SankeyFlow({ expenses }: SankeyFlowProps) {
                     width={width}
                     height={height}
                     fill={payload.color}
-                    fillOpacity="0.9"
-                    rx={2}
+                    fillOpacity="0.85"
+                    rx={4}
+                    className="shadow-sm"
                 />
                 {height > 10 && (
                     <text
-                        x={x < containerWidth / 2 ? x + width + 6 : x - 6}
-                        y={y + height / 2 - (height > 25 ? 6 : 0)}
+                        x={x < containerWidth / 2 ? x + width + 8 : x - 8}
+                        y={y + height / 2 - (height > 25 ? 7 : 0)}
                         textAnchor={x < containerWidth / 2 ? 'start' : 'end'}
-                        fill="#1e293b"
+                        fill="#0f172a"
                         fontSize="11"
-                        fontWeight="700"
+                        fontWeight="900"
+                        className="uppercase tracking-tighter"
                         alignmentBaseline="middle"
                     >
                         {payload.name}
@@ -121,12 +123,13 @@ export function SankeyFlow({ expenses }: SankeyFlowProps) {
                 )}
                 {height > 25 && (
                     <text
-                        x={x < containerWidth / 2 ? x + width + 6 : x - 6}
-                        y={y + height / 2 + 7}
+                        x={x < containerWidth / 2 ? x + width + 8 : x - 8}
+                        y={y + height / 2 + 9}
                         textAnchor={x < containerWidth / 2 ? 'start' : 'end'}
-                        fill="#475569"
+                        fill="#64748b"
                         fontSize="10"
-                        fontWeight="600"
+                        fontWeight="800"
+                        className="font-black"
                         alignmentBaseline="middle"
                     >
                         {payload.value.toLocaleString('en-IN', {
@@ -142,42 +145,51 @@ export function SankeyFlow({ expenses }: SankeyFlowProps) {
 
     if (data.nodes.length === 0) {
         return (
-            <Card className="rounded-2xl border-none shadow-sm h-full flex items-center justify-center">
-                <p className="text-muted-foreground">Insufficient data for Sankey flow.</p>
-            </Card>
+            <div className="h-[400px] flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-2xl border border-white/40">
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Insufficient flow data</p>
+            </div>
         );
     }
 
     // Dynamic height based on node count to prevent squashing
-    const chartHeight = Math.max(600, data.nodes.length * 18);
+    const chartHeight = Math.max(600, data.nodes.length * 20);
 
     return (
-        <div className="w-full bg-slate-50/30">
-            <div className="max-h-[700px] overflow-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+        <div className="w-full">
+            <div className="max-h-[700px] overflow-auto custom-scrollbar bg-white/10 backdrop-blur-sm rounded-t-2xl border-x border-t border-white/40">
                 <div style={{ minWidth: '940px', height: `${chartHeight}px`, padding: '40px 60px' }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <Sankey
                             data={data}
                             node={<CustomNode containerWidth={940} />}
-                            link={{ stroke: COLORS.link, strokeOpacity: 0.3 }}
+                            link={{ stroke: COLORS.link, strokeOpacity: 0.15 }}
                             margin={{ top: 20, right: 180, bottom: 20, left: 10 }}
-                            nodePadding={14}
+                            nodePadding={20}
                             iterations={64}
                         >
                             <RechartsTooltip
                                 formatter={(value: number | undefined) => [
                                     value !== undefined ? `${value.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}` : '0',
-                                    'Value'
+                                    'Flow Value'
                                 ]}
-                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }}
+                                contentStyle={{
+                                    borderRadius: '16px',
+                                    border: '1px solid rgba(255,255,255,0.4)',
+                                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                                    backdropFilter: 'blur(12px)',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                    padding: '12px',
+                                    fontWeight: '900',
+                                    fontSize: '12px'
+                                }}
                             />
                         </Sankey>
                     </ResponsiveContainer>
                 </div>
             </div>
-            <div className="p-3 border-t border-slate-100 bg-white/50 text-center">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Interactive Flow • Scroll to explore details
+            <div className="p-4 border border-white/40 bg-white/30 backdrop-blur-md rounded-b-2xl text-center shadow-lg shadow-indigo-500/5">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic opacity-60">
+                    Interactive Revenue Flow • Scroll horizontally or vertically to explore
                 </span>
             </div>
         </div>
