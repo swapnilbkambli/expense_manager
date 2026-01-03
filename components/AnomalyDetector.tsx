@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { AlertCircle, ArrowUpRight, TrendingUp, EyeOff } from 'lucide-react';
 import { Anomaly } from '../lib/types/expense';
-import { ignoreInsightAction } from '../lib/actions';
+import { ignoreInsightAction, bulkIgnoreInsightsAction } from '../lib/actions';
 import { InsightDetailsModal } from './InsightDetailsModal';
 
 interface AnomalyDetectorProps {
@@ -16,6 +16,13 @@ export default function AnomalyDetector({ anomalies, onRefresh }: AnomalyDetecto
 
     const handleIgnore = async (rowId: string) => {
         await ignoreInsightAction('anomaly', rowId);
+        onRefresh();
+    };
+
+    const handleIgnoreAll = async () => {
+        if (anomalies.length === 0) return;
+        const ids = anomalies.map(a => a.rowId);
+        await bulkIgnoreInsightsAction('anomaly', ids);
         onRefresh();
     };
 
@@ -38,8 +45,16 @@ export default function AnomalyDetector({ anomalies, onRefresh }: AnomalyDetecto
                         Significant Outliers Detected
                     </p>
                 </div>
-                <div className="w-8 h-8 bg-rose-50 rounded-lg flex items-center justify-center border border-rose-100 animate-pulse">
-                    <AlertCircle className="w-4 h-4 text-rose-600" />
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleIgnoreAll}
+                        className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-700 transition-colors"
+                    >
+                        Ignore All
+                    </button>
+                    <div className="w-8 h-8 bg-rose-50 rounded-lg flex items-center justify-center border border-rose-100 animate-pulse">
+                        <AlertCircle className="w-4 h-4 text-rose-600" />
+                    </div>
                 </div>
             </div>
 
@@ -55,10 +70,15 @@ export default function AnomalyDetector({ anomalies, onRefresh }: AnomalyDetecto
                             <div className="flex items-start justify-between">
                                 <div className="flex-1 min-w-0 pr-4">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-[10px] font-black px-2 py-0.5 bg-rose-100 text-rose-700 rounded uppercase">
+                                        <span className="text-[9px] font-black px-1.5 py-0.5 bg-rose-100 text-rose-700 rounded uppercase">
                                             {anomaly.category}
                                         </span>
-                                        <span className="text-[10px] font-bold text-slate-400">{anomaly.date}</span>
+                                        {anomaly.subcategory && (
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase">
+                                                {anomaly.subcategory}
+                                            </span>
+                                        )}
+                                        <span className="text-[10px] font-bold text-slate-300 ml-auto">{anomaly.date}</span>
                                     </div>
                                     <p className="text-sm font-black text-slate-900 truncate">
                                         {anomaly.description}

@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { Expense, FilterState } from './types/expense';
+import { Expense, FilterState, CategoryBudget } from './types/expense';
 
 const DB_PATH = path.join(process.cwd(), 'expenses.db');
 
@@ -44,8 +44,10 @@ function initDb() {
         CREATE INDEX IF NOT EXISTS idx_parsedDate ON expenses(parsedDate);
 
         CREATE TABLE IF NOT EXISTS budgets (
-            category TEXT PRIMARY KEY,
-            amount REAL
+            category TEXT,
+            subcategory TEXT DEFAULT '',
+            amount REAL,
+            PRIMARY KEY (category, subcategory)
         );
 
         CREATE TABLE IF NOT EXISTS ignored_insights (
@@ -183,14 +185,19 @@ export function getAllExpensesForExport(): Expense[] {
     }));
 }
 
-export function setBudget(category: string, amount: number) {
+export function setBudget(category: string, amount: number, subcategory: string = '') {
     const database = getDb();
-    database.prepare('INSERT OR REPLACE INTO budgets (category, amount) VALUES (?, ?)').run(category, amount);
+    database.prepare('INSERT OR REPLACE INTO budgets (category, subcategory, amount) VALUES (?, ?, ?)').run(category, subcategory, amount);
 }
 
-export function getBudgets(): { category: string, amount: number }[] {
+export function getBudgets(): CategoryBudget[] {
     const database = getDb();
-    return database.prepare('SELECT * FROM budgets').all() as { category: string, amount: number }[];
+    return database.prepare('SELECT category, subcategory, amount FROM budgets').all() as CategoryBudget[];
+}
+
+export function removeBudget(category: string, subcategory: string = '') {
+    const database = getDb();
+    database.prepare('DELETE FROM budgets WHERE category = ? AND subcategory = ?').run(category, subcategory);
 }
 
 export function clearBudgets() {
@@ -201,6 +208,17 @@ export function clearBudgets() {
 export function setIgnoredInsight(type: string, identifier: string) {
     const database = getDb();
     database.prepare('INSERT OR REPLACE INTO ignored_insights (type, identifier) VALUES (?, ?)').run(type, identifier);
+}
+
+export function bulkSetIgnoredInsights(type: string, identifiers: string[]) {
+    const database = getDb();
+    const insert = database.prepare('INSERT OR REPLACE INTO ignored_insights (type, identifier) VALUES (?, ?)');
+    const insertMany = database.transaction((ids: string[]) => {
+        for (const id of ids) {
+            insert.run(type, id);
+        }
+    });
+    insertMany(identifiers);
 }
 
 export function getIgnoredInsights(): { type: string, identifier: string }[] {

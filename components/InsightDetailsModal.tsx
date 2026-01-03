@@ -51,7 +51,8 @@ export function InsightDetailsModal({
                                 <TableHeader className="bg-slate-100/50 sticky top-0 z-10">
                                     <TableRow className="hover:bg-transparent border-slate-200">
                                         <TableHead className="text-[10px] font-black uppercase text-slate-600">Date</TableHead>
-                                        <TableHead className="text-[10px] font-black uppercase text-slate-600">Category</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase text-slate-600">Classification</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase text-slate-600">Description</TableHead>
                                         <TableHead className="text-[10px] font-black uppercase text-slate-600">Account</TableHead>
                                         <TableHead className="text-right text-[10px] font-black uppercase text-slate-600">Amount</TableHead>
                                     </TableRow>
@@ -59,14 +60,22 @@ export function InsightDetailsModal({
                                 <TableBody>
                                     {transactions.map((t, idx) => (
                                         <TableRow key={idx} className="border-slate-100 hover:bg-white transition-colors">
-                                            <TableCell className="text-xs font-bold text-slate-900">{t.date}</TableCell>
+                                            <TableCell className="text-[11px] font-bold text-slate-900 whitespace-nowrap">{t.date}</TableCell>
                                             <TableCell>
-                                                <span className="text-[10px] font-black px-2 py-0.5 bg-slate-100 text-slate-600 rounded uppercase">
-                                                    {t.category}
-                                                </span>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] font-black text-indigo-600 uppercase">
+                                                        {t.category}
+                                                    </span>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase">
+                                                        {t.subcategory}
+                                                    </span>
+                                                </div>
                                             </TableCell>
-                                            <TableCell className="text-xs font-medium text-slate-500">{t.account}</TableCell>
-                                            <TableCell className="text-right text-sm font-black text-slate-900">
+                                            <TableCell className="text-[11px] font-medium text-slate-700 max-w-[200px] truncate">
+                                                {t.description}
+                                            </TableCell>
+                                            <TableCell className="text-[10px] font-medium text-slate-500">{t.account}</TableCell>
+                                            <TableCell className="text-right text-xs font-black text-slate-900">
                                                 ₹{Math.abs(t.amount).toLocaleString('en-IN')}
                                             </TableCell>
                                         </TableRow>

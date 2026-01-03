@@ -12,9 +12,11 @@ import {
     updateExpense,
     getBudgets,
     setBudget,
+    removeBudget,
     getAllExpensesForExport,
     getIgnoredInsights,
     setIgnoredInsight,
+    bulkSetIgnoredInsights,
     clearIgnoredInsights
 } from './db';
 import { FilterState, Expense, CategoryMapping, SummaryMetrics, PeriodSummary, AdvancedInsights, CategoryBudget } from './types/expense';
@@ -275,6 +277,16 @@ export async function ignoreInsightAction(type: 'recurring' | 'anomaly', identif
     }
 }
 
+export async function bulkIgnoreInsightsAction(type: 'recurring' | 'anomaly', identifiers: string[]) {
+    try {
+        bulkSetIgnoredInsights(type, identifiers);
+        return { success: true };
+    } catch (error) {
+        console.error('Error in bulkIgnoreInsightsAction:', error);
+        return { success: false, error: 'Failed to bulk ignore insights' };
+    }
+}
+
 export async function clearIgnoredInsightsAction() {
     try {
         clearIgnoredInsights();
@@ -285,13 +297,23 @@ export async function clearIgnoredInsightsAction() {
     }
 }
 
-export async function updateBudgetAction(category: string, amount: number) {
+export async function updateBudgetAction(category: string, amount: number, subcategory: string = '') {
     try {
-        setBudget(category, amount);
+        setBudget(category, amount, subcategory);
         return { success: true };
     } catch (error) {
         console.error('Error in updateBudgetAction:', error);
         return { success: false, error: 'Failed to update budget' };
+    }
+}
+
+export async function removeBudgetAction(category: string, subcategory: string = '') {
+    try {
+        removeBudget(category, subcategory);
+        return { success: true };
+    } catch (error) {
+        console.error('Error in removeBudgetAction:', error);
+        return { success: false, error: 'Failed to remove budget' };
     }
 }
 

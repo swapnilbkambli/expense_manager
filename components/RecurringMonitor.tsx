@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Calendar, Repeat, ArrowRight, EyeOff, ArrowUpRight } from 'lucide-react';
 import { RecurringExpense } from '../lib/types/expense';
-import { ignoreInsightAction } from '../lib/actions';
+import { ignoreInsightAction, bulkIgnoreInsightsAction } from '../lib/actions';
 import { InsightDetailsModal } from './InsightDetailsModal';
 
 interface RecurringMonitorProps {
@@ -17,6 +17,13 @@ export default function RecurringMonitor({ recurring, onRefresh }: RecurringMoni
     const handleIgnore = async (description: string) => {
         const identifier = description.toLowerCase().trim().substring(0, 20);
         await ignoreInsightAction('recurring', identifier);
+        onRefresh();
+    };
+
+    const handleIgnoreAll = async () => {
+        if (recurring.length === 0) return;
+        const identifiers = recurring.map(r => r.description.toLowerCase().trim().substring(0, 20));
+        await bulkIgnoreInsightsAction('recurring', identifiers);
         onRefresh();
     };
 
@@ -39,8 +46,16 @@ export default function RecurringMonitor({ recurring, onRefresh }: RecurringMoni
                         Detected Monthly Bills & Subs
                     </p>
                 </div>
-                <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center border border-indigo-100">
-                    <Repeat className="w-4 h-4 text-indigo-600" />
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleIgnoreAll}
+                        className="text-[10px] font-black text-indigo-500 uppercase tracking-widest hover:text-indigo-700 transition-colors"
+                    >
+                        Ignore All
+                    </button>
+                    <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center border border-indigo-100">
+                        <Repeat className="w-4 h-4 text-indigo-600" />
+                    </div>
                 </div>
             </div>
 
@@ -52,6 +67,16 @@ export default function RecurringMonitor({ recurring, onRefresh }: RecurringMoni
                     >
                         <div className="flex items-start justify-between z-10">
                             <div className="flex-1 min-w-0 pr-4">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-[9px] font-black px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded uppercase">
+                                        {item.category}
+                                    </span>
+                                    {item.subcategory && (
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase">
+                                            {item.subcategory}
+                                        </span>
+                                    )}
+                                </div>
                                 <p className="text-sm font-black text-slate-900 truncate group-hover:text-indigo-700 transition-colors">
                                     {item.description}
                                 </p>
@@ -60,7 +85,7 @@ export default function RecurringMonitor({ recurring, onRefresh }: RecurringMoni
                                         <Calendar className="w-3 h-3" />
                                         Last: {item.lastSeen}
                                     </span>
-                                    <span className="text-[10px] px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-md font-bold uppercase">
+                                    <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md font-bold uppercase">
                                         {item.frequency}
                                     </span>
                                 </div>

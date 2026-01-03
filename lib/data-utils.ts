@@ -168,12 +168,13 @@ export const detectRecurringExpenses = (expenses: Expense[], ignoredIdentifiers:
     const groups: { [key: string]: Expense[] } = {};
 
     outgoing.forEach(e => {
-        // Group by description + amount (with slight variance allowed)
-        // Simplified: just by normalized description for now
-        const key = e.description.toLowerCase().trim().substring(0, 20);
-        if (ignoredIdentifiers.includes(key)) return;
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(e);
+        // Group by category + subcategory + normalized description
+        const descKey = e.description.toLowerCase().trim().substring(0, 20);
+        const groupKey = `${e.category}|${e.subcategory}|${descKey}`;
+
+        if (ignoredIdentifiers.includes(descKey)) return;
+        if (!groups[groupKey]) groups[groupKey] = [];
+        groups[groupKey].push(e);
     });
 
     const recurring = Object.entries(groups)
@@ -190,6 +191,8 @@ export const detectRecurringExpenses = (expenses: Expense[], ignoredIdentifiers:
 
             return {
                 description: items[0].description,
+                category: items[0].category,
+                subcategory: items[0].subcategory,
                 avgAmount: Math.abs(items.reduce((a, b) => a + b.amount, 0) / items.length),
                 frequency: isMonthly ? 'Monthly' : 'Periodic',
                 count: items.length,

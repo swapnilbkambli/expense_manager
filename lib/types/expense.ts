@@ -83,6 +83,7 @@ export interface SavingsTrendItem {
 
 export interface CategoryBudget {
     category: string;
+    subcategory?: string;
     amount: number;
 }
 
