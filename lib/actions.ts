@@ -22,36 +22,61 @@ const REMOTE_CSV_URL = 'https://drive.google.com/uc?export=download&id=1QynFzfTQ
 
 export async function getDefaultCSVData() {
     try {
-        // Try fetching from remote Google Drive link first
-        const response = await fetch(REMOTE_CSV_URL);
+        console.log('Attempting to fetch remote CSV...');
+        const response = await fetch(REMOTE_CSV_URL, {
+            headers: {
+                // Add User-Agent to avoid being blocked or getting a limited response
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            },
+            next: { revalidate: 3600 } // Cache for 1 hour
+        });
+
         if (response.ok) {
             const remoteContent = await response.text();
-            // Basic validation to ensure we got something that looks like a CSV (at least one newline)
-            if (remoteContent.includes('\n')) {
-                return remoteContent;
-            }
-        }
 
-        // Fallback to local file if remote fetch fails or returns invalid data
+            // SECURITY/VALIDATION: Ensure we got a CSV, not a HTML login/preview page
+            const isHtml = remoteContent.trim().toLowerCase().startsWith('<!doctype html') ||
+                remoteContent.toLowerCase().includes('<html');
+            const hasCsvHeader = remoteContent.includes('Date,') || remoteContent.includes('Amount,');
+
+            if (!isHtml && hasCsvHeader) {
+                console.log('Remote CSV successfully fetched and validated.');
+                return remoteContent;
+            } else {
+                console.warn('Remote URL returned non-CSV content (likely HTML/Login page). Falling back to local.');
+            }
+        } else {
+            console.warn(`Remote fetch failed with status: ${response.status}. Falling back to local.`);
+        }
+    } catch (error) {
+        console.warn('Network error during remote fetch, falling back to local file.');
+    }
+
+    // Default Fallback to local file
+    try {
         const filePath = path.join(process.cwd(), 'project_documentation', 'expensemanager.csv');
         const fileContent = await fs.readFile(filePath, 'utf8');
         return fileContent;
-    } catch (error) {
-        console.warn('Error fetching remote CSV, falling back to local:', error);
-        try {
-            const filePath = path.join(process.cwd(), 'project_documentation', 'expensemanager.csv');
-            const fileContent = await fs.readFile(filePath, 'utf8');
-            return fileContent;
-        } catch (localError) {
-            console.error('Error reading default CSV data:', localError);
-            throw new Error('Failed to load default data');
-        }
+    } catch (localError) {
+        console.error('CRITICAL: Failed to load both remote and local CSV data:', localError);
+        throw new Error('Failed to load default data');
     }
 }
 
 export async function importExpensesAction(csvText: string) {
     try {
+        if (!csvText || csvText.length < 50) {
+            throw new Error('CSV content too short or empty');
+        }
+
         const expenses = await parseExpenseCSV(csvText);
+
+        if (expenses.length === 0) {
+            console.warn('Import resulted in zero expenses. Aborting database clear to prevent data loss.');
+            return { success: false, error: 'No valid expenses found in CSV' };
+        }
+
+        // Only clear if we actually have data to replace it with
         clearExpenses();
         bulkInsertExpenses(expenses);
         return { success: true, count: expenses.length };
