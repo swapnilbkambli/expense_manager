@@ -12,11 +12,13 @@ export const parseExpenseCSV = (csvString: string): Promise<Expense[]> => {
             complete: (results) => {
                 const parsedData: Expense[] = results.data.map((row: any) => {
                     const dateStr = row['Date'] || '';
-                    // CSV format: DD-MM-YYYY
-                    let parsedDate = parse(dateStr, 'dd-MM-yyyy', new Date());
+                    // Support multiple formats: YYYY-MM-DD or DD-MM-YYYY
+                    let parsedDate = parse(dateStr, 'yyyy-MM-dd', new Date());
+                    if (!isValid(parsedDate)) {
+                        parsedDate = parse(dateStr, 'dd-MM-yyyy', new Date());
+                    }
 
                     if (!isValid(parsedDate)) {
-                        // Fallback or handle invalid date
                         parsedDate = new Date(0);
                     }
 

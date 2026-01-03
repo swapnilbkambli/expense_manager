@@ -64,11 +64,6 @@ export default function SmartInsights({ expenses }: SmartInsightsProps) {
                     recurring={insights.recurring}
                     onRefresh={() => setRefreshTrigger(prev => prev + 1)}
                 />
-                <BudgetTracker
-                    budgets={insights.budgets}
-                    expenses={expenses}
-                    onRefresh={() => setRefreshTrigger(prev => prev + 1)}
-                />
                 <AnomalyDetector
                     anomalies={insights.anomalies}
                     onRefresh={() => setRefreshTrigger(prev => prev + 1)}

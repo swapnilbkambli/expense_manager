@@ -58,6 +58,7 @@ function initDb() {
     `);
 }
 
+
 export function clearExpenses() {
     const database = getDb();
     database.prepare('DELETE FROM expenses').run();
@@ -224,6 +225,12 @@ export function bulkSetIgnoredInsights(type: string, identifiers: string[]) {
 export function getIgnoredInsights(): { type: string, identifier: string }[] {
     const database = getDb();
     return database.prepare('SELECT * FROM ignored_insights').all() as { type: string, identifier: string }[];
+}
+
+export function getExpenseCount(): number {
+    const database = getDb();
+    const result = database.prepare('SELECT COUNT(*) as count FROM expenses').get() as { count: number };
+    return result.count;
 }
 
 export function clearIgnoredInsights() {

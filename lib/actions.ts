@@ -325,3 +325,23 @@ export async function getBudgetsAction(): Promise<CategoryBudget[]> {
         return [];
     }
 }
+
+export async function getExpenseCountAction(): Promise<number> {
+    try {
+        const { getExpenseCount } = await import('./db');
+        return getExpenseCount();
+    } catch (error) {
+        console.error('Error in getExpenseCountAction:', error);
+        return 0;
+    }
+}
+
+export async function syncWithSourceAction() {
+    try {
+        const csvText = await getDefaultCSVData();
+        return await importExpensesAction(csvText);
+    } catch (error: any) {
+        console.error('Error in syncWithSourceAction:', error);
+        return { success: false, error: error.message };
+    }
+}

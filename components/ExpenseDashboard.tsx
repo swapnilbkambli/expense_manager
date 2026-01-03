@@ -19,9 +19,11 @@ import SmartInsights from './SmartInsights';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { getDefaultCSVData, importExpensesAction, fetchExpensesAction, getFilterDataAction, exportToCSVAction, backupDefaultCSVAction, getCategoryMappingAction } from '@/lib/actions';
-import { Upload, Plus, Loader2, Download } from 'lucide-react';
+import { getDefaultCSVData, importExpensesAction, fetchExpensesAction, getFilterDataAction, exportToCSVAction, backupDefaultCSVAction, getCategoryMappingAction, getBudgetsAction, getExpenseCountAction, syncWithSourceAction } from '@/lib/actions';
+import { Upload, Plus, Loader2, Download, Target, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import BudgetTracker from './BudgetTracker';
+import { CategoryBudget } from '@/lib/types/expense';
 
 export default function ExpenseDashboard() {
     const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
@@ -35,10 +37,11 @@ export default function ExpenseDashboard() {
     const [prevMetrics, setPrevMetrics] = useState<DashboardMetrics | null>(null);
     const [refreshCounter, setRefreshCounter] = useState(0);
     const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
+    const [budgets, setBudgets] = useState<CategoryBudget[]>([]);
 
     const [filters, setFilters] = useState<FilterState>({
-        dateRange: { from: undefined, to: new Date() },
-        timeRange: 'Custom',
+        dateRange: getDateRangeFromType('YTD'),
+        timeRange: 'YTD',
         categories: [],
         subcategories: [],
         searchQuery: '',
@@ -47,23 +50,29 @@ export default function ExpenseDashboard() {
     const [isSankeyExpanded, setIsSankeyExpanded] = useState(false);
     const [isHeatmapExpanded, setIsHeatmapExpanded] = useState(false);
 
-    const loadData = async (shouldImportDefault = false) => {
+    const loadData = async (shouldCheckPersistence = false) => {
         setIsLoading(true);
         try {
-            if (shouldImportDefault) {
-                const csvText = await getDefaultCSVData();
-                await importExpensesAction(csvText);
+            if (shouldCheckPersistence) {
+                const count = await getExpenseCountAction();
+                if (count === 0) {
+                    console.log('Database is empty, importing default CSV...');
+                    const csvText = await getDefaultCSVData();
+                    await importExpensesAction(csvText);
+                }
             }
 
-            const [data, filterMetaData, mapping, fullData] = await Promise.all([
+            const [data, filterMetaData, mapping, fullData, budgetData] = await Promise.all([
                 fetchExpensesAction(filters),
                 getFilterDataAction(),
                 getCategoryMappingAction(),
-                fetchExpensesAction({ ...filters, dateRange: { from: undefined, to: undefined }, timeRange: 'All Time', categories: [], subcategories: [], searchQuery: '' })
+                fetchExpensesAction({ ...filters, dateRange: { from: undefined, to: undefined }, timeRange: 'All Time', categories: [], subcategories: [], searchQuery: '' }),
+                getBudgetsAction()
             ]);
 
             setFilteredExpenses(data);
             setAllExpenses(fullData);
+            setBudgets(budgetData);
             setCategories(filterMetaData.categories);
             setSubcategories(filterMetaData.subcategories);
 
@@ -101,17 +110,19 @@ export default function ExpenseDashboard() {
     const refreshData = async () => {
         try {
             const prevPeriod = getPreviousPeriod(filters.dateRange.from, filters.dateRange.to);
-            const [data, baseData, prevData] = await Promise.all([
+            const [data, baseData, prevData, budgetData] = await Promise.all([
                 fetchExpensesAction(filters),
                 fetchExpensesAction({
                     ...filters,
                     categories: [],
                     subcategories: [],
                 }),
-                prevPeriod.from ? fetchExpensesAction({ ...filters, dateRange: prevPeriod }) : Promise.resolve([])
+                prevPeriod.from ? fetchExpensesAction({ ...filters, dateRange: prevPeriod }) : Promise.resolve([]),
+                getBudgetsAction()
             ]);
             setFilteredExpenses(data);
             setBaseFilteredExpenses(baseData);
+            setBudgets(budgetData);
             setPrevMetrics(calculateMetrics(prevData));
         } catch (error) {
             console.error('Error refreshing data:', error);
@@ -138,6 +149,24 @@ export default function ExpenseDashboard() {
             prevNetSavings: prevMetrics?.netSavings,
         };
     }, [filteredExpenses, prevMetrics]);
+
+    const handleSync = async () => {
+        setIsImporting(true);
+        try {
+            const result = await syncWithSourceAction();
+            if (result.success) {
+                await loadData();
+                alert(`Successfully synced ${result.count} transactions from source.`);
+            } else {
+                alert(`Sync failed: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Sync error:', error);
+            alert('An error occurred during sync.');
+        } finally {
+            setIsImporting(false);
+        }
+    };
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -245,10 +274,24 @@ export default function ExpenseDashboard() {
                         </div>
                     )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSync}
+                        disabled={isImporting}
+                        className="bg-indigo-50 border-indigo-100 text-indigo-700 hover:bg-indigo-100 font-bold"
+                    >
+                        {isImporting ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                            <RefreshCw className="w-4 h-4 mr-2" />
+                        )}
+                        Sync from Source
+                    </Button>
                     <Button variant="outline" size="sm" onClick={handleExportCSV}>
                         <Download className="w-4 h-4 mr-2" />
-                        Export to CSV
+                        Export
                     </Button>
                     <input
                         type="file"
@@ -262,7 +305,7 @@ export default function ExpenseDashboard() {
                             {isImporting ? (
                                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importing...</>
                             ) : (
-                                <><Upload className="w-4 h-4 mr-2" /> Upload New CSV</>
+                                <><Upload className="w-4 h-4 mr-2" /> Local CSV</>
                             )}
                         </label>
                     </Button>
@@ -278,6 +321,14 @@ export default function ExpenseDashboard() {
             />
 
             <MetricCards metrics={metrics} />
+
+            <div className="w-full">
+                <BudgetTracker
+                    budgets={budgets}
+                    expenses={allExpenses}
+                    onRefresh={refreshData}
+                />
+            </div>
 
             <QuickSummary refreshTrigger={refreshCounter} />
 
