@@ -220,8 +220,6 @@ export default function ExpenseDashboard() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <QuickSummary refreshTrigger={refreshCounter} />
-
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex flex-col gap-2">
                     <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-1">
@@ -273,6 +271,8 @@ export default function ExpenseDashboard() {
             />
 
             <MetricCards metrics={metrics} />
+
+            <QuickSummary refreshTrigger={refreshCounter} />
 
             <div className="grid grid-cols-1 gap-6">
                 <SankeyFlow expenses={filteredExpenses} />
