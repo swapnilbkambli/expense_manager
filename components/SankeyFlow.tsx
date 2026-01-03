@@ -111,9 +111,9 @@ export function SankeyFlow({ expenses }: SankeyFlowProps) {
                         x={x < containerWidth / 2 ? x + width + 6 : x - 6}
                         y={y + height / 2 - (height > 25 ? 6 : 0)}
                         textAnchor={x < containerWidth / 2 ? 'start' : 'end'}
-                        fill="#334155"
-                        fontSize="10"
-                        fontWeight="600"
+                        fill="#1e293b"
+                        fontSize="11"
+                        fontWeight="700"
                         alignmentBaseline="middle"
                     >
                         {payload.name}
@@ -124,8 +124,9 @@ export function SankeyFlow({ expenses }: SankeyFlowProps) {
                         x={x < containerWidth / 2 ? x + width + 6 : x - 6}
                         y={y + height / 2 + 7}
                         textAnchor={x < containerWidth / 2 ? 'start' : 'end'}
-                        fill="#64748b"
-                        fontSize="9"
+                        fill="#475569"
+                        fontSize="10"
+                        fontWeight="600"
                         alignmentBaseline="middle"
                     >
                         {payload.value.toLocaleString('en-IN', {

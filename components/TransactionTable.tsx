@@ -452,7 +452,7 @@ export function TransactionTable({
                                             </div>
                                         ) : (
                                             <span
-                                                className="text-muted-foreground cursor-pointer hover:underline hover:text-slate-900 transition-colors"
+                                                className="text-slate-600 font-medium cursor-pointer hover:underline hover:text-slate-900 transition-colors"
                                                 onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'subcategory', value: expense.subcategory, originalValue: expense.subcategory })}
                                             >
                                                 {expense.subcategory}
@@ -529,9 +529,9 @@ export function TransactionTable({
                                                     </Badge>
                                                 </div>
                                                 <div className="flex items-center gap-3">
-                                                    <span className="text-xs text-slate-500 font-medium">Group Total:</span>
+                                                    <span className="text-xs text-slate-600 font-bold uppercase tracking-tight">Group Total:</span>
                                                     <span className={cn(
-                                                        "font-bold",
+                                                        "font-black text-sm",
                                                         catGroup.total > 0 ? "text-emerald-600" : "text-slate-900"
                                                     )}>
                                                         {catGroup.total.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
@@ -565,7 +565,7 @@ export function TransactionTable({
                                                                 >
                                                                     {sub.name}
                                                                 </span>
-                                                                <span className="text-[10px] text-slate-400">
+                                                                <span className="text-[11px] font-bold text-slate-500">
                                                                     ({sub.count})
                                                                 </span>
                                                             </div>
@@ -711,7 +711,7 @@ export function TransactionTable({
 
             {!isGrouped && (
                 <div className="flex items-center justify-between px-2">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm font-bold text-slate-600">
                         Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, sortedExpenses.length)} of {sortedExpenses.length} transactions
                     </p>
                     <div className="flex items-center space-x-2">

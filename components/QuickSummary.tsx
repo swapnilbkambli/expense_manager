@@ -40,16 +40,16 @@ export function QuickSummary({ refreshTrigger = 0 }: QuickSummaryProps) {
             {periods.map((period) => (
                 <Card key={period.key} className="border-none shadow-sm bg-white overflow-hidden transition-all hover:shadow-md">
                     <CardContent className="p-4">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">{period.label}</div>
+                        <div className="text-[11px] font-extrabold text-slate-600 uppercase tracking-widest mb-3 border-b border-slate-50 pb-1">{period.label}</div>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 text-emerald-600">
                                     <div className="p-1 bg-emerald-50 rounded-full">
                                         <TrendingUp className="w-3 h-3" />
                                     </div>
-                                    <span className="text-[11px] font-bold uppercase tracking-tight">Income</span>
+                                    <span className="text-[12px] font-bold uppercase tracking-tight">Income</span>
                                 </div>
-                                <span className="text-sm font-extrabold text-slate-900">
+                                <span className="text-[15px] font-black text-slate-900">
                                     {period.data.income.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
                                 </span>
                             </div>
@@ -58,9 +58,9 @@ export function QuickSummary({ refreshTrigger = 0 }: QuickSummaryProps) {
                                     <div className="p-1 bg-rose-50 rounded-full">
                                         <TrendingDown className="w-3 h-3" />
                                     </div>
-                                    <span className="text-[11px] font-bold uppercase tracking-tight">Expenses</span>
+                                    <span className="text-[12px] font-bold uppercase tracking-tight">Expenses</span>
                                 </div>
-                                <span className="text-sm font-extrabold text-slate-900">
+                                <span className="text-[15px] font-black text-slate-900">
                                     {period.data.expenses.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
                                 </span>
                             </div>

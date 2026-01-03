@@ -169,10 +169,10 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
             <div className="flex flex-wrap items-center gap-3">
                 {/* Search */}
                 <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                     <Input
                         placeholder="Search description, category..."
-                        className="pl-9 h-10"
+                        className="pl-9 h-10 border-slate-300 placeholder:text-slate-400 font-medium"
                         value={filters.searchQuery}
                         onChange={(e) => setFilters((prev) => ({ ...prev, searchQuery: e.target.value }))}
                     />
@@ -243,7 +243,7 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
                             <PopoverContent className="w-auto p-4" align="start">
                                 <div className="space-y-4">
                                     <div className="grid gap-1.5">
-                                        <label className="text-xs font-medium text-muted-foreground">From (DD/MM/YYYY)</label>
+                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">From (DD/MM/YYYY)</label>
                                         <Input
                                             placeholder="DD/MM/YYYY"
                                             value={fromInput}
@@ -285,7 +285,7 @@ export function FilterBar({ filters, setFilters, categories, subcategories, cate
                             <PopoverContent className="w-auto p-4" align="start">
                                 <div className="space-y-4">
                                     <div className="grid gap-1.5">
-                                        <label className="text-xs font-medium text-muted-foreground">To (DD/MM/YYYY)</label>
+                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">To (DD/MM/YYYY)</label>
                                         <Input
                                             placeholder="DD/MM/YYYY"
                                             value={toInput}

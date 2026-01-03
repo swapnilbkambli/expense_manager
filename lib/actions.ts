@@ -18,14 +18,34 @@ import {
     endOfYear
 } from 'date-fns';
 
+const REMOTE_CSV_URL = 'https://drive.google.com/uc?export=download&id=1QynFzfTQdqQPviMmhaIeJgPcig3YQRRH';
+
 export async function getDefaultCSVData() {
     try {
+        // Try fetching from remote Google Drive link first
+        const response = await fetch(REMOTE_CSV_URL);
+        if (response.ok) {
+            const remoteContent = await response.text();
+            // Basic validation to ensure we got something that looks like a CSV (at least one newline)
+            if (remoteContent.includes('\n')) {
+                return remoteContent;
+            }
+        }
+
+        // Fallback to local file if remote fetch fails or returns invalid data
         const filePath = path.join(process.cwd(), 'project_documentation', 'expensemanager.csv');
         const fileContent = await fs.readFile(filePath, 'utf8');
         return fileContent;
     } catch (error) {
-        console.error('Error reading default CSV data:', error);
-        throw new Error('Failed to load default data');
+        console.warn('Error fetching remote CSV, falling back to local:', error);
+        try {
+            const filePath = path.join(process.cwd(), 'project_documentation', 'expensemanager.csv');
+            const fileContent = await fs.readFile(filePath, 'utf8');
+            return fileContent;
+        } catch (localError) {
+            console.error('Error reading default CSV data:', localError);
+            throw new Error('Failed to load default data');
+        }
     }
 }
 

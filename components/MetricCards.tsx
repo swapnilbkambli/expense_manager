@@ -32,7 +32,7 @@ export function MetricCards({ metrics }: MetricCardsProps) {
             )}>
                 {isPositive ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
                 {Math.abs(change).toFixed(1)}%
-                <span className="text-muted-foreground font-normal ml-1">vs prev. period</span>
+                <span className="text-slate-600 font-bold ml-1">vs prev. period</span>
             </div>
         );
     };
@@ -74,8 +74,8 @@ export function MetricCards({ metrics }: MetricCardsProps) {
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-1">{card.title}</p>
-                                <h3 className="text-2xl font-bold tracking-tight">{card.value}</h3>
+                                <p className="text-xs font-black uppercase tracking-wider text-slate-500 mb-1">{card.title}</p>
+                                <h3 className="text-2xl font-black tracking-tight text-slate-900">{card.value}</h3>
                                 {formatChange(card.change)}
                             </div>
                             <div className={`p-3 rounded-xl ${card.bgColor}`}>
