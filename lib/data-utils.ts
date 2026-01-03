@@ -74,6 +74,15 @@ export const calculateMetrics = (expenses: Expense[]): DashboardMetrics => {
     };
 };
 
+export const getPreviousPeriod = (from?: Date, to?: Date) => {
+    if (!from || !to) return { from: undefined, to: undefined };
+    const diff = to.getTime() - from.getTime();
+    return {
+        from: new Date(from.getTime() - diff - 86400000), // -1 day to be safe
+        to: new Date(from.getTime() - 86400000)
+    };
+};
+
 export const getTrendData = (expenses: Expense[]) => {
     // Simple monthly aggregation for now
     const monthlyData: { [key: string]: { date: string; income: number; expense: number } } = {};

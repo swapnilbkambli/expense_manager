@@ -13,9 +13,18 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, X, Edit, ChevronRight as ChevronRightIcon, ChevronDown as ChevronDownIcon, Layers, List } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, X, Edit, ChevronRight as ChevronRightIcon, ChevronDown as ChevronDownIcon, Layers, List, Save, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { updateExpenseAction } from '@/lib/actions';
 import { cn } from '@/lib/utils';
 import { EditTransactionModal } from './EditTransactionModal';
 
@@ -51,6 +60,8 @@ export function TransactionTable({
     const [isGrouped, setIsGrouped] = useState(false);
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
     const [expandedSubcategories, setExpandedSubcategories] = useState<Set<string>>(new Set());
+    const [inlineEditing, setInlineEditing] = useState<{ rowId: string, field: string, value: any, originalValue: any } | null>(null);
+    const [isSavingInline, setIsSavingInline] = useState(false);
     const itemsPerPage = 10;
 
     // Use global filters if available, otherwise fallback to empty (though they should be provided)
@@ -165,6 +176,34 @@ export function TransactionTable({
     const getSortIcon = (key: keyof Expense | 'absAmount') => {
         if (!sortConfig || sortConfig.key !== key) return <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />;
         return sortConfig.direction === 'asc' ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />;
+    };
+
+    const handleInlineSave = async () => {
+        if (!inlineEditing) return;
+        const { rowId, field, value, originalValue } = inlineEditing;
+
+        if (value === originalValue) {
+            setInlineEditing(null);
+            return;
+        }
+
+        const expense = expenses.find(e => e.rowId === rowId);
+        if (!expense || !expense.id) return;
+
+        setIsSavingInline(true);
+        try {
+            const result = await updateExpenseAction(expense.id, { [field]: value });
+            if (result.success) {
+                onRefresh?.();
+                setInlineEditing(null);
+            } else {
+                alert('Failed to update: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Inline update error:', error);
+        } finally {
+            setIsSavingInline(false);
+        }
     };
 
     return (
@@ -351,21 +390,101 @@ export function TransactionTable({
                                 <TableRow key={`${expense.rowId}-${index}`}>
                                     <TableCell className="font-medium">{expense.date}</TableCell>
                                     <TableCell>
-                                        <Badge
-                                            variant="outline"
-                                            className="bg-slate-50 font-normal cursor-pointer hover:bg-slate-100"
-                                            onClick={() => onToggleCategory?.(expense.category)}
-                                        >
-                                            {expense.category}
-                                        </Badge>
+                                        {inlineEditing?.rowId === expense.rowId && inlineEditing?.field === 'category' ? (
+                                            <div className="flex items-center gap-1">
+                                                <Select
+                                                    value={inlineEditing.value}
+                                                    onValueChange={(val) => setInlineEditing({ ...inlineEditing, value: val })}
+                                                >
+                                                    <SelectTrigger className="h-8 w-32">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {categories?.filter(Boolean).map(cat => (
+                                                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600" onClick={handleInlineSave} disabled={isSavingInline}>
+                                                    <Check className="h-4 w-4" />
+                                                </Button>
+                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-rose-600" onClick={() => setInlineEditing(null)} disabled={isSavingInline}>
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <Badge
+                                                variant="outline"
+                                                className="bg-slate-50 font-normal cursor-pointer hover:bg-slate-100"
+                                                onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'category', value: expense.category, originalValue: expense.category })}
+                                            >
+                                                {expense.category}
+                                            </Badge>
+                                        )}
                                     </TableCell>
-                                    <TableCell
-                                        className="text-muted-foreground cursor-pointer hover:underline hover:text-slate-900 transition-colors"
-                                        onClick={() => onToggleSubcategory?.(expense.subcategory)}
-                                    >
-                                        {expense.subcategory}
+                                    <TableCell>
+                                        {inlineEditing?.rowId === expense.rowId && inlineEditing?.field === 'subcategory' ? (
+                                            <div className="flex items-center gap-1">
+                                                <Select
+                                                    value={inlineEditing.value}
+                                                    onValueChange={(val) => setInlineEditing({ ...inlineEditing, value: val })}
+                                                >
+                                                    <SelectTrigger className="h-8 w-32">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {(() => {
+                                                            const availableSubs = expense.category
+                                                                ? (categoryMapping[expense.category] || []).filter(s => subcategories?.includes(s))
+                                                                : subcategories;
+                                                            return availableSubs?.filter(Boolean).map(sub => (
+                                                                <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                                                            ));
+                                                        })()}
+                                                    </SelectContent>
+                                                </Select>
+                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600" onClick={handleInlineSave} disabled={isSavingInline}>
+                                                    <Check className="h-4 w-4" />
+                                                </Button>
+                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-rose-600" onClick={() => setInlineEditing(null)} disabled={isSavingInline}>
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <span
+                                                className="text-muted-foreground cursor-pointer hover:underline hover:text-slate-900 transition-colors"
+                                                onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'subcategory', value: expense.subcategory, originalValue: expense.subcategory })}
+                                            >
+                                                {expense.subcategory}
+                                            </span>
+                                        )}
                                     </TableCell>
-                                    <TableCell className="max-w-[200px] truncate">{expense.description}</TableCell>
+                                    <TableCell className="max-w-[250px]">
+                                        {inlineEditing?.rowId === expense.rowId && inlineEditing?.field === 'description' ? (
+                                            <div className="flex items-center gap-1">
+                                                <Input
+                                                    className="h-8"
+                                                    value={inlineEditing.value}
+                                                    onChange={(e) => setInlineEditing({ ...inlineEditing, value: e.target.value })}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') handleInlineSave();
+                                                        if (e.key === 'Escape') setInlineEditing(null);
+                                                    }}
+                                                    autoFocus
+                                                />
+                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-600" onClick={handleInlineSave} disabled={isSavingInline}>
+                                                    <Check className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <div
+                                                className="truncate cursor-pointer hover:bg-slate-50 p-1 rounded transition-colors"
+                                                onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'description', value: expense.description, originalValue: expense.description })}
+                                            >
+                                                {expense.description}
+                                            </div>
+                                        )}
+                                    </TableCell>
                                     <TableCell className={`text-right font-semibold ${expense.amount > 0 ? 'text-emerald-600' : 'text-foreground'}`}>
                                         {expense.amount > 0 ? '+' : ''}
                                         {expense.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
@@ -465,14 +584,95 @@ export function TransactionTable({
                                                     <TableRow key={`${expense.rowId}-${txIdx}`} className="bg-slate-50/10 hover:bg-slate-50 transition-colors">
                                                         <TableCell className="pl-14 text-xs text-slate-500">{expense.date}</TableCell>
                                                         <TableCell className="pl-14">
-                                                            <Badge variant="outline" className="text-[10px] font-normal opacity-60">
-                                                                {expense.category}
-                                                            </Badge>
+                                                            {inlineEditing?.rowId === expense.rowId && inlineEditing?.field === 'category' ? (
+                                                                <div className="flex items-center gap-1">
+                                                                    <Select
+                                                                        value={inlineEditing.value}
+                                                                        onValueChange={(val) => setInlineEditing({ ...inlineEditing, value: val })}
+                                                                    >
+                                                                        <SelectTrigger className="h-6 w-28 text-[10px]">
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {categories?.filter(Boolean).map(cat => (
+                                                                                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-emerald-600" onClick={handleInlineSave} disabled={isSavingInline}>
+                                                                        <Check className="h-3 w-3" />
+                                                                    </Button>
+                                                                </div>
+                                                            ) : (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="text-[10px] font-normal opacity-60 cursor-pointer hover:bg-slate-50"
+                                                                    onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'category', value: expense.category, originalValue: expense.category })}
+                                                                >
+                                                                    {expense.category}
+                                                                </Badge>
+                                                            )}
                                                         </TableCell>
                                                         <TableCell className="text-[10px] text-slate-400 italic">
-                                                            {expense.subcategory}
+                                                            {inlineEditing?.rowId === expense.rowId && inlineEditing?.field === 'subcategory' ? (
+                                                                <div className="flex items-center gap-1">
+                                                                    <Select
+                                                                        value={inlineEditing.value}
+                                                                        onValueChange={(val) => setInlineEditing({ ...inlineEditing, value: val })}
+                                                                    >
+                                                                        <SelectTrigger className="h-6 w-28 text-[10px]">
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {(() => {
+                                                                                const availableSubs = expense.category
+                                                                                    ? (categoryMapping[expense.category] || []).filter(s => subcategories?.includes(s))
+                                                                                    : subcategories;
+                                                                                return availableSubs?.filter(Boolean).map(sub => (
+                                                                                    <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                                                                                ));
+                                                                            })()}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-emerald-600" onClick={handleInlineSave} disabled={isSavingInline}>
+                                                                        <Check className="h-3 w-3" />
+                                                                    </Button>
+                                                                </div>
+                                                            ) : (
+                                                                <span
+                                                                    className="cursor-pointer hover:underline"
+                                                                    onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'subcategory', value: expense.subcategory, originalValue: expense.subcategory })}
+                                                                >
+                                                                    {expense.subcategory}
+                                                                </span>
+                                                            )}
                                                         </TableCell>
-                                                        <TableCell className="max-w-[200px] truncate text-xs">{expense.description}</TableCell>
+                                                        <TableCell className="max-w-[200px] truncate text-xs">
+                                                            {inlineEditing?.rowId === expense.rowId && inlineEditing?.field === 'description' ? (
+                                                                <div className="flex items-center gap-1">
+                                                                    <Input
+                                                                        className="h-6 text-xs"
+                                                                        value={inlineEditing.value}
+                                                                        onChange={(e) => setInlineEditing({ ...inlineEditing, value: e.target.value })}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === 'Enter') handleInlineSave();
+                                                                            if (e.key === 'Escape') setInlineEditing(null);
+                                                                        }}
+                                                                        autoFocus
+                                                                    />
+                                                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-emerald-600" onClick={handleInlineSave} disabled={isSavingInline}>
+                                                                        <Check className="h-3 w-3" />
+                                                                    </Button>
+                                                                </div>
+                                                            ) : (
+                                                                <div
+                                                                    className="cursor-pointer hover:bg-slate-50 p-0.5 rounded"
+                                                                    onClick={() => setInlineEditing({ rowId: expense.rowId, field: 'description', value: expense.description, originalValue: expense.description })}
+                                                                >
+                                                                    {expense.description}
+                                                                </div>
+                                                            )}
+                                                        </TableCell>
                                                         <TableCell className={cn(
                                                             "text-right text-xs font-medium",
                                                             expense.amount > 0 ? 'text-emerald-600' : 'text-slate-600'

@@ -5,8 +5,18 @@ import path from 'path';
 import Papa from 'papaparse';
 import { parseExpenseCSV } from './csv-parser';
 import { clearExpenses, bulkInsertExpenses, queryExpenses, updateExpense, getAllExpensesForExport } from './db';
-import { FilterState, Expense, CategoryMapping } from './types/expense';
+import { FilterState, Expense, CategoryMapping, SummaryMetrics, PeriodSummary } from './types/expense';
 import { toTitleCase } from './data-utils';
+import {
+    startOfToday,
+    startOfWeek,
+    startOfMonth,
+    startOfYear,
+    endOfToday,
+    endOfWeek,
+    endOfMonth,
+    endOfYear
+} from 'date-fns';
 
 export async function getDefaultCSVData() {
     try {
@@ -141,5 +151,37 @@ export async function getCategoryMappingAction(): Promise<CategoryMapping> {
     } catch (error) {
         console.error('Error reading category mapping:', error);
         return {};
+    }
+}
+
+export async function getSummaryMetricsAction(): Promise<SummaryMetrics> {
+    try {
+        const db = (await import('./db')).getDb();
+        const now = new Date();
+
+        const getMetricsForRange = (from: Date, to: Date): PeriodSummary => {
+            const result = db.prepare(`
+                SELECT 
+                    SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as income,
+                    SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as expenses
+                FROM expenses 
+                WHERE parsedDate >= ? AND parsedDate <= ?
+            `).get(from.getTime(), to.getTime()) as { income: number | null, expenses: number | null };
+
+            return {
+                income: result.income || 0,
+                expenses: result.expenses || 0
+            };
+        };
+
+        return {
+            today: getMetricsForRange(startOfToday(), endOfToday()),
+            thisWeek: getMetricsForRange(startOfWeek(now, { weekStartsOn: 1 }), endOfWeek(now, { weekStartsOn: 1 })),
+            thisMonth: getMetricsForRange(startOfMonth(now), endOfMonth(now)),
+            ytd: getMetricsForRange(startOfYear(now), endOfYear(now))
+        };
+    } catch (error) {
+        console.error('Error in getSummaryMetricsAction:', error);
+        throw new Error('Failed to fetch summary metrics');
     }
 }

@@ -38,8 +38,23 @@ export interface DashboardMetrics {
     totalIncome: number;
     totalExpenses: number;
     netSavings: number;
+    prevTotalIncome?: number;
+    prevTotalExpenses?: number;
+    prevNetSavings?: number;
 }
 
 export interface CategoryMapping {
     [category: string]: string[];
+}
+
+export interface PeriodSummary {
+    income: number;
+    expenses: number;
+}
+
+export interface SummaryMetrics {
+    today: PeriodSummary;
+    thisWeek: PeriodSummary;
+    thisMonth: PeriodSummary;
+    ytd: PeriodSummary;
 }

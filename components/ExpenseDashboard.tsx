@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Expense, FilterState, TimeRange } from '@/lib/types/expense';
-import { calculateMetrics, getDateRangeFromType } from '@/lib/data-utils';
+import { calculateMetrics, getDateRangeFromType, getPreviousPeriod } from '@/lib/data-utils';
+import { DashboardMetrics, Expense, FilterState, TimeRange, CategoryMapping } from '@/lib/types/expense';
 import { MetricCards } from './MetricCards';
 import { SpendingInsights } from './SpendingInsights';
 import { FilterBar } from './FilterBar';
@@ -12,13 +12,15 @@ import { CategoryDonut } from './Charts/CategoryDonut';
 import { SubcategoryBar } from './Charts/SubcategoryBar';
 import { AveragesTable } from './AveragesTable';
 import { RollupTable } from './RollupTable';
+import { SpendingHeatmap } from './SpendingHeatmap';
+import { SankeyFlow } from './SankeyFlow';
+import { QuickSummary } from './QuickSummary';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getDefaultCSVData, importExpensesAction, fetchExpensesAction, getFilterDataAction, exportToCSVAction, backupDefaultCSVAction, getCategoryMappingAction } from '@/lib/actions';
 import { Upload, Plus, Loader2, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CategoryMapping } from '@/lib/types/expense';
 
 export default function ExpenseDashboard() {
     const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
@@ -29,6 +31,8 @@ export default function ExpenseDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [transactionView, setTransactionView] = useState<'list' | 'rollup'>('list');
     const [isImporting, setIsImporting] = useState(false);
+    const [prevMetrics, setPrevMetrics] = useState<DashboardMetrics | null>(null);
+    const [refreshCounter, setRefreshCounter] = useState(0);
 
     const [filters, setFilters] = useState<FilterState>({
         dateRange: { from: undefined, to: new Date() },
@@ -74,6 +78,7 @@ export default function ExpenseDashboard() {
                 subcategories: [],
             });
             setBaseFilteredExpenses(baseData);
+            setRefreshCounter(prev => prev + 1);
 
         } catch (error) {
             console.error('Error loading data:', error);
@@ -88,16 +93,19 @@ export default function ExpenseDashboard() {
 
     const refreshData = async () => {
         try {
-            const [data, baseData] = await Promise.all([
+            const prevPeriod = getPreviousPeriod(filters.dateRange.from, filters.dateRange.to);
+            const [data, baseData, prevData] = await Promise.all([
                 fetchExpensesAction(filters),
                 fetchExpensesAction({
                     ...filters,
                     categories: [],
                     subcategories: [],
-                })
+                }),
+                prevPeriod.from ? fetchExpensesAction({ ...filters, dateRange: prevPeriod }) : Promise.resolve([])
             ]);
             setFilteredExpenses(data);
             setBaseFilteredExpenses(baseData);
+            setPrevMetrics(calculateMetrics(prevData));
         } catch (error) {
             console.error('Error refreshing data:', error);
         }
@@ -115,8 +123,14 @@ export default function ExpenseDashboard() {
     }, [filters]);
 
     const metrics = useMemo(() => {
-        return calculateMetrics(filteredExpenses);
-    }, [filteredExpenses]);
+        const current = calculateMetrics(filteredExpenses);
+        return {
+            ...current,
+            prevTotalIncome: prevMetrics?.totalIncome,
+            prevTotalExpenses: prevMetrics?.totalExpenses,
+            prevNetSavings: prevMetrics?.netSavings,
+        };
+    }, [filteredExpenses, prevMetrics]);
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -206,6 +220,8 @@ export default function ExpenseDashboard() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
+            <QuickSummary refreshTrigger={refreshCounter} />
+
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex flex-col gap-2">
                     <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-1">
@@ -257,6 +273,10 @@ export default function ExpenseDashboard() {
             />
 
             <MetricCards metrics={metrics} />
+
+            <div className="grid grid-cols-1 gap-6">
+                <SankeyFlow expenses={filteredExpenses} />
+            </div>
 
             <SpendingInsights expenses={filteredExpenses} viewMode={filters.viewMode} />
 
@@ -313,6 +333,8 @@ export default function ExpenseDashboard() {
                     </CardContent>
                 </Card>
             </div>
+
+            <SpendingHeatmap expenses={filteredExpenses} />
 
             <Card className="rounded-2xl border-none shadow-sm overflow-hidden">
                 <CardHeader className="bg-white border-b border-slate-50 pb-2 flex flex-row items-center justify-between">
